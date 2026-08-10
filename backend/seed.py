@@ -4,8 +4,10 @@ and create a default admin account.
 Run with: python seed.py
 """
 
+from copy import deepcopy
+
 from app.auth import hash_password
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, ensure_schema
 from app.models import Product, User, UserRole
 from app.schemas import ProductCreate
 from app.services import product_service
@@ -132,13 +134,171 @@ COURSES: list[dict] = [
     dict(title="Site Reliability Engineering Fundamentals", instructor="Naledi Mokoena", category="Cloud & DevOps",
          level="Advanced", price=85, old_price=149, duration_label="10H 15M", lessons_count=36,
          rating=4.8, reviews_count=528, tags="sre,reliability",
-         description="SLOs, error budgets, and incident response — the SRE practices that turn uptime into an engineering discipline instead of a hope."),
+         description="SLOs, error budgets, and incident response — the SRE practices that turn uptime into an engineering discipline instead of a hope.",
+         course_content={
+             "overview": "Turn reliability from a vague aspiration into an operating practice. You will define service-level objectives, run calm and useful incident response, and build the feedback loops that make each release and on-call shift safer.",
+             "outcomes": [
+                 "Define meaningful SLIs and SLOs that reflect what users actually experience.",
+                 "Use error budgets to balance reliability work with product delivery.",
+                 "Write practical runbooks and lead blameless incident reviews.",
+                 "Build an on-call practice that protects both customers and engineers.",
+             ],
+             "sections": [
+                 {
+                     "title": "Reliability as a product decision",
+                     "summary": "Establish the shared language, service boundaries and user journeys that make reliability measurable.",
+                     "duration_label": "1H 12M",
+                     "lessons": [
+                         {"title": "What SRE changes — and what it does not", "duration_label": "16M"},
+                         {"title": "Map the journeys your users rely on", "duration_label": "18M"},
+                         {"title": "Service ownership and dependency boundaries", "duration_label": "20M"},
+                         {"title": "Workshop: write your reliability charter", "duration_label": "18M"},
+                     ],
+                 },
+                 {
+                     "title": "SLIs, SLOs and error budgets",
+                     "summary": "Turn user expectations into measurable targets, then use the results to guide delivery decisions.",
+                     "duration_label": "1H 38M",
+                     "lessons": [
+                         {"title": "Selecting signals that users would recognise", "duration_label": "22M"},
+                         {"title": "Setting an SLO without choosing false precision", "duration_label": "24M"},
+                         {"title": "Error budgets as a team decision tool", "duration_label": "20M"},
+                         {"title": "Lab: create an SLO dashboard brief", "duration_label": "18M"},
+                         {"title": "Review: common SLO anti-patterns", "duration_label": "14M"},
+                     ],
+                 },
+                 {
+                     "title": "Observability that explains the system",
+                     "summary": "Design the logs, metrics and traces that help responders understand impact and narrow a failure quickly.",
+                     "duration_label": "1H 28M",
+                     "lessons": [
+                         {"title": "The questions every dashboard should answer", "duration_label": "18M"},
+                         {"title": "Golden signals and business context", "duration_label": "20M"},
+                         {"title": "Tracing a request through a distributed system", "duration_label": "22M"},
+                         {"title": "Alert design: actionable, timely and calm", "duration_label": "16M"},
+                         {"title": "Lab: make an alert runbook-ready", "duration_label": "12M"},
+                     ],
+                 },
+                 {
+                     "title": "Incident response without chaos",
+                     "summary": "Build the roles, communication habits and runbooks that make a stressful incident easier to manage.",
+                     "duration_label": "1H 31M",
+                     "lessons": [
+                         {"title": "Declare, assess and assign roles", "duration_label": "19M"},
+                         {"title": "Communicating impact to customers and stakeholders", "duration_label": "17M"},
+                         {"title": "Runbooks that support judgment, not scripts", "duration_label": "21M"},
+                         {"title": "Simulation: work through a degraded checkout", "duration_label": "22M"},
+                         {"title": "The first hour after recovery", "duration_label": "12M"},
+                     ],
+                 },
+                 {
+                     "title": "Learning from failure",
+                     "summary": "Turn incidents and near misses into concrete, blameless improvements that teams will actually complete.",
+                     "duration_label": "1H 10M",
+                     "lessons": [
+                         {"title": "A timeline that reveals, rather than assigns blame", "duration_label": "17M"},
+                         {"title": "Writing corrective actions with clear owners", "duration_label": "19M"},
+                         {"title": "Tracking reliability debt alongside product work", "duration_label": "18M"},
+                         {"title": "Review: facilitate a learning-focused postmortem", "duration_label": "16M"},
+                     ],
+                 },
+                 {
+                     "title": "Sustainable on-call and continuous improvement",
+                     "summary": "Set healthy support expectations and create a reliability roadmap that keeps the practice moving forward.",
+                     "duration_label": "1H 16M",
+                     "lessons": [
+                         {"title": "On-call rotations people can sustain", "duration_label": "18M"},
+                         {"title": "Reducing toil before it burns out the team", "duration_label": "20M"},
+                         {"title": "Capacity, resilience and game-day planning", "duration_label": "21M"},
+                         {"title": "Capstone: present your 90-day reliability plan", "duration_label": "17M"},
+                     ],
+                 },
+             ],
+         }),
 
     # ---- Design ----
     dict(title="Design Systems for Product Teams", instructor="Noor Haddad", category="Design",
          level="Intermediate", price=59, old_price=None, duration_label="7H 30M", lessons_count=31,
          rating=4.8, reviews_count=1540, tags="design-systems,ui",
-         description="Build a design system that a growing team actually adopts — tokens, component contracts, and the governance that keeps it from rotting."),
+         description="Build a design system that a growing team actually adopts — tokens, component contracts, and the governance that keeps it from rotting.",
+         course_content={
+             "overview": "A practical, end-to-end guide to turning visual decisions into a shared product language. You will audit a live interface, define foundations, build resilient components, and create the rituals that keep the system useful after launch.",
+             "outcomes": [
+                 "Translate brand and interface decisions into durable design tokens.",
+                 "Build accessible component contracts that work across product and engineering.",
+                 "Set up contribution, release, and adoption practices for a growing team.",
+                 "Measure whether the system is reducing rework and improving consistency.",
+             ],
+             "sections": [
+                 {
+                     "title": "Why systems earn trust",
+                     "summary": "Start with the product problems a system should solve, and identify the work worth standardising.",
+                     "duration_label": "58M",
+                     "lessons": [
+                         {"title": "From UI inventory to a useful system brief", "duration_label": "14M"},
+                         {"title": "Finding high-leverage patterns in a product audit", "duration_label": "16M"},
+                         {"title": "A team charter for design and engineering", "duration_label": "15M"},
+                         {"title": "Workshop: map your consistency gaps", "duration_label": "13M"},
+                     ],
+                 },
+                 {
+                     "title": "Foundations: tokens, type and colour",
+                     "summary": "Create a small, expressive set of foundations that can support real interfaces without becoming fragile.",
+                     "duration_label": "1H 18M",
+                     "lessons": [
+                         {"title": "Token architecture: primitive, semantic and component tokens", "duration_label": "20M"},
+                         {"title": "Typography scales that preserve hierarchy", "duration_label": "18M"},
+                         {"title": "Colour roles, contrast and dark-mode readiness", "duration_label": "22M"},
+                         {"title": "Lab: naming foundations people can actually use", "duration_label": "18M"},
+                     ],
+                 },
+                 {
+                     "title": "Components with clear contracts",
+                     "summary": "Move from one-off screens to flexible components, with states and APIs that hold up in production.",
+                     "duration_label": "1H 34M",
+                     "lessons": [
+                         {"title": "Choosing the first components to standardise", "duration_label": "17M"},
+                         {"title": "Anatomy, variants and sensible defaults", "duration_label": "24M"},
+                         {"title": "Designing every state: loading, empty and error", "duration_label": "21M"},
+                         {"title": "Writing component guidance that removes ambiguity", "duration_label": "17M"},
+                         {"title": "Lab: build a composable input pattern", "duration_label": "15M"},
+                     ],
+                 },
+                 {
+                     "title": "Accessibility as a design constraint",
+                     "summary": "Make inclusive behaviour part of each component’s definition, not a QA pass at the end.",
+                     "duration_label": "1H 05M",
+                     "lessons": [
+                         {"title": "Keyboard and focus patterns", "duration_label": "17M"},
+                         {"title": "Labels, semantics and screen-reader context", "duration_label": "19M"},
+                         {"title": "Testing the system’s accessible defaults", "duration_label": "16M"},
+                         {"title": "Review: fixing common component failures", "duration_label": "13M"},
+                     ],
+                 },
+                 {
+                     "title": "Governance without gatekeeping",
+                     "summary": "Create a contribution model that lets the system evolve while protecting quality and coherence.",
+                     "duration_label": "1H 20M",
+                     "lessons": [
+                         {"title": "Ownership models for small and scaling teams", "duration_label": "18M"},
+                         {"title": "Contribution requests and decision records", "duration_label": "21M"},
+                         {"title": "Versioning and release notes people will read", "duration_label": "19M"},
+                         {"title": "Making adoption easy in design and code", "duration_label": "22M"},
+                     ],
+                 },
+                 {
+                     "title": "Launch, adoption and evolution",
+                     "summary": "Ship a focused first release, establish feedback loops, and use evidence to guide what comes next.",
+                     "duration_label": "1H 15M",
+                     "lessons": [
+                         {"title": "Preparing a system launch that changes behaviour", "duration_label": "18M"},
+                         {"title": "Measuring adoption, drift and delivery impact", "duration_label": "20M"},
+                         {"title": "Roadmaps that balance maintenance and momentum", "duration_label": "19M"},
+                         {"title": "Capstone: present your system plan", "duration_label": "18M"},
+                     ],
+                 },
+             ],
+         }),
     dict(title="UX Research Without a Budget", instructor="Alicia Fuentes", category="Design",
          level="Beginner", price=39, old_price=69, duration_label="5H 10M", lessons_count=22,
          rating=4.6, reviews_count=780, tags="ux-research,product-design",
@@ -196,8 +356,156 @@ COURSES: list[dict] = [
 ]
 
 
+# A topic-specific learning path for every course in the catalog. Lesson rows and
+# timings are generated from these module names so the displayed curriculum stays
+# in sync with each product's advertised duration and lesson count.
+COURSE_OUTLINES: dict[str, tuple[str, str, str, str]] = {
+    "Production LangGraph: Agents That Ship": ("Agent architecture and state", "Tools, memory and handoffs", "Evaluation and observability", "Deployment and operational guardrails"),
+    "Evaluating LLM Systems": ("Evaluation strategy and datasets", "Rubrics, graders and human review", "Regression testing and experimentation", "Monitoring quality in production"),
+    "Vector Databases in Production": ("Embedding and indexing foundations", "Retrieval design and relevance", "Sync, filtering and operations", "Choosing and shipping a vector store"),
+    "Tool Use & Function Calling Deep Dive": ("Reliable tool schemas", "Tool orchestration and parallelism", "Error recovery and guardrails", "Testing tool-enabled agents"),
+    "Multi-Agent Systems in Practice": ("Coordination architectures", "Planning, delegation and memory", "Critique loops and failure handling", "Measuring multi-agent performance"),
+    "Retrieval Systems that Scale": ("Corpus design and chunking", "Hybrid search and re-ranking", "Metadata, freshness and filtering", "Production retrieval operations"),
+    "Prompt Engineering for Engineers": ("Prompt foundations and constraints", "Few-shot patterns and templates", "Structured outputs and tool prompts", "Testing prompts as an engineering system"),
+    "Full-Stack Next.js: From Zero to Deployed": ("App Router and component architecture", "Data, forms and server actions", "Authentication and product features", "Testing, deployment and operations"),
+    "Advanced React Patterns": ("Component API design", "Reusable state and custom hooks", "Composition and state machines", "Performance and production patterns"),
+    "API Design with FastAPI": ("Resource modelling and HTTP semantics", "Validation, errors and documentation", "Pagination, filtering and versioning", "Testing and operating APIs"),
+    "TypeScript for Large Codebases": ("Type modelling and narrowing", "Generics and reusable abstractions", "Module boundaries and API contracts", "Migration and maintainability at scale"),
+    "Web Performance Engineering": ("Measuring user-centred performance", "Rendering and loading strategy", "JavaScript, assets and caching", "Diagnosing and sustaining improvements"),
+    "CSS That Scales: Design Systems in Practice": ("Tokens and styling architecture", "Component styles and variants", "Responsive layouts and accessibility", "Governance and team adoption"),
+    "Authentication & Authorization Done Right": ("Identity, sessions and tokens", "Authorization models and permissions", "OAuth, security and threat modelling", "Testing and operating auth systems"),
+    "Feature Engineering at Scale": ("Feature discovery and data quality", "Reusable feature pipelines", "Training-serving consistency", "Monitoring drift and feature operations"),
+    "Streaming Data Pipelines with Kafka": ("Topics, partitions and consumer groups", "Schema evolution and event design", "Delivery guarantees and recovery", "Operating streaming systems"),
+    "Statistics for Data Scientists": ("Probability and sampling intuition", "Estimation and confidence intervals", "Hypothesis tests and interpretation", "Communicating statistical decisions"),
+    "Practical Machine Learning with scikit-learn": ("Problem framing and data preparation", "Models, validation and metrics", "Pipelines and feature workflows", "Deployment and model iteration"),
+    "Deep Learning Foundations": ("Neural-network building blocks", "Backpropagation and optimisation", "Architectures and regularisation", "Training diagnostics and practical experiments"),
+    "Experiment Design & A/B Testing": ("Experiment questions and hypotheses", "Power, metrics and instrumentation", "Running clean experiments", "Reading results and deciding responsibly"),
+    "SQL for Analytics at Scale": ("Relational thinking and query structure", "Joins, CTEs and window functions", "Query plans and performance", "Reliable analytics workflows"),
+    "Kubernetes in Production": ("Cluster and workload foundations", "Networking, storage and configuration", "Scaling, security and delivery", "Troubleshooting production clusters"),
+    "AWS Solutions Architect Bootcamp": ("Core AWS building blocks", "Resilience, networking and identity", "Cost-aware architecture decisions", "Architecture reviews and exam scenarios"),
+    "CI/CD Pipelines that Don't Break": ("Pipeline design and quality gates", "Build speed, caching and parallelism", "Safe deployments and rollbacks", "Observability and continuous improvement"),
+    "Infrastructure as Code with Terraform": ("Terraform workflow and state", "Reusable modules and environments", "Testing, policy and collaboration", "Drift, delivery and operations"),
+    "Observability: Logs, Metrics, and Traces": ("Signals and service context", "Structured logs and useful metrics", "Tracing distributed requests", "Dashboards, alerts and incident response"),
+    "Docker Deep Dive": ("Images, layers and build strategy", "Container networking and storage", "Compose and local development", "Security, debugging and delivery"),
+    "Site Reliability Engineering Fundamentals": ("Reliability as a product decision", "SLIs, SLOs and error budgets", "Incident response and learning", "Sustainable on-call and improvement"),
+    "Design Systems for Product Teams": ("System strategy and interface audits", "Tokens, type and visual foundations", "Components and accessible behaviour", "Governance, adoption and evolution"),
+    "UX Research Without a Budget": ("Research questions and lightweight planning", "Interviews, tests and fast evidence", "Synthesising signals into insights", "Sharing findings and changing decisions"),
+    "Product Design Portfolio Masterclass": ("Portfolio strategy and story selection", "Case-study narrative and craft", "Presenting process and outcomes", "Feedback, refinement and interview readiness"),
+    "Interaction Design & Micro-interactions": ("Interaction principles and feedback", "Motion, timing and state changes", "Designing forms and system feedback", "Prototyping and usability refinement"),
+    "Design for Accessibility": ("Inclusive design foundations", "Colour, type and visual access", "Keyboard, screen-reader and interaction patterns", "Testing and embedding accessible practice"),
+    "Figma to Production Handoff": ("File structure and design intent", "Tokens, specs and component contracts", "Collaborative handoff workflows", "QA, feedback and design-code parity"),
+    "Visual Design Fundamentals": ("Hierarchy, balance and layout", "Typography and readable systems", "Colour, imagery and visual rhythm", "Critique and practical application"),
+    "Application Security Fundamentals": ("Threats, trust boundaries and OWASP", "Input handling and common exploits", "Authentication, sessions and secrets", "Security testing and remediation"),
+    "Threat Modeling in Practice": ("System mapping and assets", "STRIDE, attack trees and abuse cases", "Prioritising risks and mitigations", "Facilitating threat-model workshops"),
+    "Cloud Security Essentials": ("Cloud responsibility and asset discovery", "IAM, credentials and least privilege", "Network, storage and workload protection", "Detection, response and compliance"),
+    "Ethical Hacking & Penetration Testing": ("Legal scoping and reconnaissance", "Enumeration and controlled exploitation", "Post-exploitation and evidence", "Reporting and remediation guidance"),
+    "Security for API Backends": ("API attack surface and auth", "Validation, rate limits and abuse controls", "Secrets, logging and secure operations", "Testing and hardening an API"),
+    "Incident Response Playbooks": ("Preparation and incident roles", "Triage, containment and communication", "Eradication, recovery and evidence", "Post-incident learning and playbooks"),
+    "Cryptography for Developers": ("Cryptographic primitives and threat models", "Hashing, encryption and key management", "TLS and secure protocol use", "Avoiding implementation mistakes"),
+}
+
+LESSON_STEPS = (
+    "Core concepts and terminology",
+    "Mental models and decision points",
+    "Patterns that work in practice",
+    "Guided implementation",
+    "Worked example",
+    "Hands-on exercise",
+    "Testing and validation",
+    "Common failure modes",
+    "Production considerations",
+    "Tooling walkthrough",
+    "Case study",
+    "Team workflow",
+    "Review and exercises",
+    "Checkpoint quiz",
+    "Capstone milestone",
+    "Next steps",
+)
+
+
+def _duration_to_minutes(value: str) -> int:
+    hours = 0
+    minutes = 0
+    for part in value.upper().split():
+        if part.endswith("H"):
+            hours = int(part[:-1])
+        elif part.endswith("M"):
+            minutes = int(part[:-1])
+    return hours * 60 + minutes
+
+
+def _format_duration(minutes: int) -> str:
+    hours, remainder = divmod(minutes, 60)
+    return f"{hours}H {remainder:02d}M" if hours else f"{remainder}M"
+
+
+def _split_total(total: int, parts: int) -> list[int]:
+    base, remainder = divmod(total, parts)
+    return [base + (1 if index < remainder else 0) for index in range(parts)]
+
+
+def build_course_content(course: dict) -> dict:
+    outline = COURSE_OUTLINES[course["title"]]
+    lesson_distribution = _split_total(course["lessons_count"], len(outline))
+    minute_distribution = _split_total(_duration_to_minutes(course["duration_label"]), len(outline))
+    sections = []
+
+    for index, (section_title, lesson_count, minutes) in enumerate(
+        zip(outline, lesson_distribution, minute_distribution, strict=True)
+    ):
+        lessons = [
+            {
+                "title": f"{section_title}: {LESSON_STEPS[lesson_index % len(LESSON_STEPS)]}",
+                "duration_label": _format_duration(max(4, minutes // lesson_count)),
+            }
+            for lesson_index in range(lesson_count)
+        ]
+        sections.append(
+            {
+                "title": section_title,
+                "summary": f"Build practical judgment around {section_title.lower()} through focused examples, decisions and applied practice.",
+                "duration_label": _format_duration(minutes),
+                "lessons": lessons,
+            }
+        )
+
+    return {
+        "headline": f"Make {course['title']} a capability your team can rely on.",
+        "overview": f"{course['description']} This guided path moves from first principles to applied decisions, so you finish with techniques you can use in real work.",
+        "outcomes": [
+            f"Build a repeatable approach to {outline[0].lower()}.",
+            f"Make sound trade-offs across {outline[1].lower()}.",
+            f"Apply {outline[2].lower()} in hands-on project work.",
+            f"Leave with a practical playbook for {outline[3].lower()}.",
+        ],
+        "sections": sections,
+    }
+
+
+def content_for_course(course: dict) -> dict:
+    """Keep the hand-authored flagship syllabi while completing their lesson rows."""
+    if not course.get("course_content"):
+        return build_course_content(course)
+
+    content = deepcopy(course["course_content"])
+    content["headline"] = f"Make {course['title']} a capability your team can rely on."
+    targets = _split_total(course["lessons_count"], len(content["sections"]))
+    for section, target in zip(content["sections"], targets, strict=True):
+        while len(section["lessons"]) < target:
+            step = LESSON_STEPS[len(section["lessons"]) % len(LESSON_STEPS)]
+            section["lessons"].append(
+                {
+                    "title": f"{section['title']}: {step}",
+                    "duration_label": "12M",
+                }
+            )
+    return content
+
+
 def main():
     Base.metadata.create_all(bind=engine)
+    ensure_schema()
     db = SessionLocal()
     try:
         admin = db.query(User).filter(User.email == ADMIN_EMAIL).first()
@@ -213,14 +521,22 @@ def main():
         else:
             print(f"Admin user already exists: {ADMIN_EMAIL}")
 
-        existing_titles = {p.title for p in db.query(Product.title).all()}
+        existing_products = {p.title: p for p in db.query(Product).all()}
         created = 0
+        updated = 0
         for course in COURSES:
-            if course["title"] in existing_titles:
+            course_content = content_for_course(course)
+            course["course_content"] = course_content
+            existing = existing_products.get(course["title"])
+            if existing:
+                if existing.course_content != course_content:
+                    existing.course_content = course_content
+                    updated += 1
                 continue
             product_service.create_product(db, ProductCreate(**course))
             created += 1
-        print(f"Seeded {created} new courses ({len(COURSES)} total in catalog definition).")
+        db.commit()
+        print(f"Seeded {created} new courses and updated {updated} course details ({len(COURSES)} total in catalog definition).")
     finally:
         db.close()
 

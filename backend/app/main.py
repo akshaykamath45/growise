@@ -6,12 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.database import Base, engine
+from app.database import Base, engine, ensure_schema
 from app.routers import auth, events, products, recommendations
 
 logging.basicConfig(level=logging.INFO)
 
 Base.metadata.create_all(bind=engine)
+ensure_schema()
 
 app = FastAPI(title="Growise API")
 

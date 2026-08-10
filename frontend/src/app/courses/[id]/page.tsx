@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { API_URL, ApiError, productsApi } from "@/lib/api";
 import { TrackProductView } from "@/components/track-product-view";
 import { EnrollPanel } from "@/components/enroll-panel";
+import { CourseCurriculum } from "@/components/course-curriculum";
 
 export default async function CourseDetailPage({
   params,
@@ -27,7 +28,7 @@ export default async function CourseDetailPage({
     .filter(Boolean);
 
   return (
-    <div className="max-w-[1180px] mx-auto px-6 py-8">
+    <div className="max-w-[1180px] mx-auto px-6 py-8 pb-16">
       <TrackProductView productId={product.id} category={product.category} />
 
       <div className="font-mono text-[10.5px] tracking-wide text-gw-text-faint flex gap-2 items-center">
@@ -43,7 +44,7 @@ export default async function CourseDetailPage({
         </Link>
       </div>
 
-      <div className="grid grid-cols-[1fr_372px] gap-10 mt-6 items-start">
+      <div className="grid grid-cols-1 gap-10 mt-6 items-start lg:grid-cols-[minmax(0,1fr)_372px]">
         <div>
           <div className="flex gap-2.5 items-center flex-wrap">
             <span className="px-2.5 py-1 rounded-full bg-gw-primary-soft text-gw-primary-hover font-mono text-[10px] tracking-wider uppercase">
@@ -53,7 +54,7 @@ export default async function CourseDetailPage({
               {product.level}
             </span>
           </div>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight leading-tight">{product.title}</h1>
+          <h1 className="mt-4 font-serif text-4xl font-semibold tracking-tight leading-tight text-gw-ink">{product.title}</h1>
           <p className="mt-3.5 text-[17px] leading-relaxed text-gw-text max-w-[64ch]">{product.description}</p>
 
           {product.image_url && (
@@ -61,7 +62,7 @@ export default async function CourseDetailPage({
             <img
               src={`${API_URL}${product.image_url}`}
               alt={product.title}
-              className="mt-6 w-full aspect-video object-cover rounded-2xl border border-gw-border-soft"
+              className="mt-6 w-full aspect-video object-cover rounded-2xl border border-gw-border-soft shadow-[0_10px_28px_-20px_rgba(28,30,42,0.38)]"
             />
           )}
 
@@ -92,6 +93,30 @@ export default async function CourseDetailPage({
                 </span>
               ))}
             </div>
+          )}
+
+          {product.course_content && (
+            <>
+              <section aria-labelledby="course-overview" className="mt-9 rounded-2xl border border-gw-border-soft bg-gw-surface p-6">
+                <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Inside the course</div>
+                <h2 id="course-overview" className="mt-1.5 font-serif text-[28px] tracking-tight text-gw-ink">
+                  {product.course_content.headline || product.title}
+                </h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-gw-text">{product.course_content.overview}</p>
+                <div className="mt-5 grid gap-3 border-t border-gw-border-hairline pt-5 sm:grid-cols-2">
+                  {product.course_content.outcomes.map((outcome) => (
+                    <div key={outcome} className="flex gap-2.5 text-[13px] leading-relaxed text-gw-text">
+                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft text-[10px] font-bold text-gw-primary-hover">
+                        ✓
+                      </span>
+                      {outcome}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <CourseCurriculum content={product.course_content} />
+            </>
           )}
         </div>
 

@@ -7,6 +7,25 @@ export interface User {
   tracking_opt_in: boolean;
 }
 
+export interface CourseLesson {
+  title: string;
+  duration_label: string;
+}
+
+export interface CourseSection {
+  title: string;
+  summary: string;
+  duration_label: string;
+  lessons: CourseLesson[];
+}
+
+export interface CourseContent {
+  headline: string;
+  overview: string;
+  outcomes: string[];
+  sections: CourseSection[];
+}
+
 export interface Product {
   id: number;
   title: string;
@@ -22,11 +41,14 @@ export interface Product {
   reviews_count: number;
   tags: string;
   image_url: string | null;
+  course_content: CourseContent | null;
   vector_synced: boolean;
   created_at: string;
 }
 
-export type ProductInput = Omit<Product, "id" | "created_at" | "vector_synced">;
+export type ProductInput = Omit<Product, "id" | "created_at" | "vector_synced" | "course_content"> & {
+  course_content?: CourseContent | null;
+};
 
 export interface RecommendationItem {
   product: Product;

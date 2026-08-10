@@ -32,6 +32,25 @@ class UserOut(BaseModel):
 
 
 # ---- Products ----
+class CourseLesson(BaseModel):
+    title: str
+    duration_label: str
+
+
+class CourseSection(BaseModel):
+    title: str
+    summary: str
+    duration_label: str
+    lessons: list[CourseLesson]
+
+
+class CourseContent(BaseModel):
+    headline: str = ""
+    overview: str
+    outcomes: list[str]
+    sections: list[CourseSection]
+
+
 class ProductBase(BaseModel):
     title: str
     description: str
@@ -46,6 +65,7 @@ class ProductBase(BaseModel):
     reviews_count: int = 0
     tags: str = ""
     image_url: str | None = None
+    course_content: CourseContent | None = None
 
 
 class ProductCreate(ProductBase):
@@ -66,6 +86,7 @@ class ProductUpdate(BaseModel):
     reviews_count: int | None = None
     tags: str | None = None
     image_url: str | None = None
+    course_content: CourseContent | None = None
 
 
 class ProductOut(ProductBase):
