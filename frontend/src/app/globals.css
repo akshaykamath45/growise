@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  /* Growise design tokens */
+  --gw-bg: #e9ebf3;
+  --gw-surface: #ffffff;
+  --gw-surface-muted: #f8f9fc;
+  --gw-ink: #1c1e2a;
+  --gw-ink-2: #2c2f3e;
+  --gw-text: #43475a;
+  --gw-text-muted: #565b6e;
+  --gw-text-faint: #6f7489;
+  --gw-text-placeholder: #9ca0b4;
+  --gw-border: #cfd2e0;
+  --gw-border-soft: #e4e6ef;
+  --gw-border-hairline: #f1f2f8;
+
+  --gw-primary: #5a47dc;
+  --gw-primary-hover: #4a38b8;
+  --gw-primary-soft: #e0e3ff;
+  --gw-primary-border: #a3a9fc;
+
+  --gw-agent: #b96e18;
+  --gw-agent-2: #94560f;
+  --gw-agent-bg: #fef6ec;
+  --gw-agent-border: #f7d3a1;
+  --gw-agent-accent: #eba243;
+  --gw-agent-icon-border: #f2b96c;
+
+  --gw-success: #16a34a;
+  --gw-error: #dc2626;
+
+  --background: var(--gw-bg);
+  --foreground: var(--gw-ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-gw-bg: var(--gw-bg);
+  --color-gw-surface: var(--gw-surface);
+  --color-gw-surface-muted: var(--gw-surface-muted);
+  --color-gw-ink: var(--gw-ink);
+  --color-gw-ink-2: var(--gw-ink-2);
+  --color-gw-text: var(--gw-text);
+  --color-gw-text-muted: var(--gw-text-muted);
+  --color-gw-text-faint: var(--gw-text-faint);
+  --color-gw-text-placeholder: var(--gw-text-placeholder);
+  --color-gw-border: var(--gw-border);
+  --color-gw-border-soft: var(--gw-border-soft);
+  --color-gw-border-hairline: var(--gw-border-hairline);
+
+  --color-gw-primary: var(--gw-primary);
+  --color-gw-primary-hover: var(--gw-primary-hover);
+  --color-gw-primary-soft: var(--gw-primary-soft);
+  --color-gw-primary-border: var(--gw-primary-border);
+
+  --color-gw-agent: var(--gw-agent);
+  --color-gw-agent-2: var(--gw-agent-2);
+  --color-gw-agent-bg: var(--gw-agent-bg);
+  --color-gw-agent-border: var(--gw-agent-border);
+  --color-gw-agent-accent: var(--gw-agent-accent);
+  --color-gw-agent-icon-border: var(--gw-agent-icon-border);
+
+  --color-gw-success: var(--gw-success);
+  --color-gw-error: var(--gw-error);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-newsreader);
+}
+
+@keyframes gwPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  a {
+    color: var(--gw-primary);
+  }
+  a:hover {
+    color: var(--gw-primary-hover);
+  }
+}

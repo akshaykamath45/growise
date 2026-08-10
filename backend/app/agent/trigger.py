@@ -1,0 +1,55 @@
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy.orm import Session
+
+from app.agent.pipeline import MEANINGFUL_EVENT_TYPES
+from app.config import settings
+from app.models import Event, Recommendation, User
+
+
+def get_active_recommendation(db: Session, user: User) -> Recommendation | None:
+    return (
+        db.query(Recommendation)
+        .filter(Recommendation.user_id == user.id, Recommendation.is_active.is_(True))
+        .order_by(Recommendation.created_at.desc())
+        .first()
+    )
+
+
+def should_regenerate(db: Session, user: User) -> tuple[bool, str]:
+    """Decide whether the agent should re-run for this user right now.
+
+    Efficiency gate: never call the LLM per-event. Only regenerate when there's
+    real new signal (enough new meaningful events) and a cooldown has passed —
+    otherwise serve the cached recommendation.
+    """
+    event_count = (
+        db.query(Event).filter(Event.user_id == user.id, Event.event_type.in_(MEANINGFUL_EVENT_TYPES)).count()
+    )
+    if event_count == 0:
+        return False, "no_signal"
+
+    last_rec = get_active_recommendation(db, user)
+    if last_rec is None:
+        return True, "first_recommendation"
+
+    last_created = last_rec.created_at
+    if last_created.tzinfo is None:
+        last_created = last_created.replace(tzinfo=timezone.utc)
+
+    new_events = (
+        db.query(Event)
+        .filter(
+            Event.user_id == user.id,
+            Event.event_type.in_(MEANINGFUL_EVENT_TYPES),
+            Event.created_at > last_created,
+        )
+        .count()
+    )
+    cooldown_elapsed = datetime.now(timezone.utc) - last_created > timedelta(
+        minutes=settings.recommendation_cooldown_minutes
+    )
+
+    if new_events >= settings.recommendation_min_new_events and cooldown_elapsed:
+        return True, f"{new_events}_new_events"
+    return False, "cached"
