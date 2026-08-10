@@ -10,25 +10,9 @@ export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
             <span className="absolute inset-2 rounded-full border border-gw-agent-border" />
             <span className="w-2 h-2 rounded-full bg-gw-agent [animation:gwPulse_2.4s_ease-in-out_infinite]" />
           </div>
-          <p className="font-serif text-[28px] leading-[1.4] text-gw-ink-2 mt-6 max-w-[30ch]">
-            Most course sites guess what you&apos;d buy. Ours tells you what it noticed, and why it&apos;s
-            suggesting this next.
+          <p className="font-serif text-[26px] leading-[1.4] text-gw-ink-2 mt-6 max-w-[26ch]">
+            Growise notices what you explore and tells you what&apos;s next.
           </p>
-          <div className="flex flex-col gap-3.5 mt-9">
-            {[
-              "Browse normally — no quizzes, no onboarding survey.",
-              "The agent writes you a short note with the evidence attached.",
-              "Say “not relevant” and the next set changes.",
-            ].map((line, i) => (
-              <div key={line} className="flex gap-3 items-start">
-                <span className="font-mono text-[10px] text-gw-agent pt-1">{String(i + 1).padStart(2, "0")}</span>
-                <span className="text-[14.5px] leading-relaxed text-gw-text">{line}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-10 pt-6 border-t border-gw-agent-border font-mono text-[10.5px] tracking-wide text-gw-agent">
-            42 COURSES · GROWING CATALOG
-          </div>
         </div>
 
         <div className="px-8 sm:px-12 py-12 flex flex-col">

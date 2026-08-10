@@ -30,6 +30,12 @@
   --gw-success: #16a34a;
   --gw-error: #dc2626;
 
+  /* Surfaces: paper for hero/nav/closing, lavender (gw-bg) for learning content,
+     cream (gw-agent-bg) strictly for Growise insight moments. */
+  --gw-paper: #fcfcfb;
+  --gw-deep: #2a2160;
+  --gw-deep-2: #221a4e;
+
   --background: var(--gw-bg);
   --foreground: var(--gw-ink);
 }
@@ -66,6 +72,10 @@
   --color-gw-success: var(--gw-success);
   --color-gw-error: var(--gw-error);
 
+  --color-gw-paper: var(--gw-paper);
+  --color-gw-deep: var(--gw-deep);
+  --color-gw-deep-2: var(--gw-deep-2);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-newsreader);
@@ -80,6 +90,25 @@
   50% {
     opacity: 1;
     transform: scale(1.2);
+  }
+}
+
+@keyframes gwFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes gwDrawLine {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
 

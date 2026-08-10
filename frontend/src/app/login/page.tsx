@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
-import { AuthSplitLayout } from "@/components/auth-split-layout";
+import { MinimalAuthLayout } from "@/components/minimal-auth-layout";
 
 const DEMO_ACCOUNTS = {
   guest: { email: "taylor@example.com", password: "TaylorPass123" },
@@ -54,14 +54,9 @@ export default function LoginPage() {
   const busy = submitting || demoLoading !== null;
 
   return (
-    <AuthSplitLayout>
-      <h1 className="text-[30px] font-semibold tracking-tight leading-tight">Welcome back</h1>
-      <p className="mt-2.5 text-[15px] text-gw-text-muted">
-        New here?{" "}
-        <Link href="/signup" className="font-medium">
-          Create an account
-        </Link>
-      </p>
+    <MinimalAuthLayout>
+      <h1 className="text-[22px] font-semibold tracking-tight leading-tight text-center">Welcome back</h1>
+      <p className="mt-1.5 text-[14px] text-gw-text-muted text-center">Continue where you left off.</p>
 
       <div className="flex flex-col gap-2.5 mt-6">
         <button
@@ -121,6 +116,13 @@ export default function LoginPage() {
           {submitting ? "Logging in…" : "Log in"}
         </button>
       </form>
-    </AuthSplitLayout>
+
+      <p className="mt-6 text-[13.5px] text-gw-text-muted text-center">
+        New to Growise?{" "}
+        <Link href="/signup" className="font-medium">
+          Create an account
+        </Link>
+      </p>
+    </MinimalAuthLayout>
   );
 }

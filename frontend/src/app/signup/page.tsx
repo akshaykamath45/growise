@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { ApiError } from "@/lib/api";
+import { ApiError, productsApi } from "@/lib/api";
+import { track } from "@/lib/tracker";
 import { AuthSplitLayout } from "@/components/auth-split-layout";
 
 export default function SignupPage() {
@@ -15,6 +16,16 @@ export default function SignupPage() {
   const [trackingOptIn, setTrackingOptIn] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [topics, setTopics] = useState<string[]>([]);
+
+  useEffect(() => {
+    productsApi.categories().then(setCategories).catch(() => {});
+  }, []);
+
+  function toggleTopic(topic: string) {
+    setTopics((prev) => (prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]));
+  }
 
   const passwordError = password.length > 0 && password.length < 8 ? "At least 8 characters." : null;
 
@@ -24,6 +35,9 @@ export default function SignupPage() {
     setSubmitting(true);
     try {
       await signup(email, password, trackingOptIn);
+      for (const topic of topics) {
+        track({ event_type: "search", search_query: topic });
+      }
       router.push("/courses");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
@@ -34,15 +48,39 @@ export default function SignupPage() {
 
   return (
     <AuthSplitLayout>
-      <h1 className="text-[30px] font-semibold tracking-tight leading-tight">Create your account</h1>
-      <p className="mt-2.5 text-[15px] text-gw-text-muted">
-        Already have one?{" "}
+      <h1 className="text-[26px] font-semibold tracking-tight leading-tight">Start learning</h1>
+      <p className="mt-2 text-[14px] text-gw-text-muted">
+        Already have an account?{" "}
         <Link href="/login" className="font-medium">
           Log in
         </Link>
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-6">
+      {categories.length > 0 && (
+        <div className="mt-5">
+          <div className="text-[13px] font-medium text-gw-text mb-2">
+            What are you exploring? <span className="text-gw-text-faint font-normal">(optional)</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {categories.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => toggleTopic(c)}
+                className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium border cursor-pointer transition-colors ${
+                  topics.includes(c)
+                    ? "bg-gw-primary border-gw-primary text-white"
+                    : "bg-white border-gw-border-soft text-gw-text hover:border-gw-primary-border"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-5">
         <div>
           <label className="block text-[13px] font-medium text-gw-text mb-1.5">Email</label>
           <input

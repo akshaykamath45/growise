@@ -23,10 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setTrackerToken(user?.tracking_opt_in ? token : null);
-  }, [token, user]);
-
+  // Tracker sync happens inline wherever token+user become known (applyToken,
+  // hydration below) rather than via a reactive effect — a `track()` call made
+  // immediately after signup()/login() resolves must never race against an
+  // effect that hasn't flushed yet.
   useEffect(() => {
     const stored = window.localStorage.getItem(TOKEN_KEY);
     if (!stored) {
@@ -36,7 +36,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(stored);
     authApi
       .me(stored)
-      .then(setUser)
+      .then((me) => {
+        setUser(me);
+        setTrackerToken(me.tracking_opt_in ? stored : null);
+      })
       .catch(() => {
         window.localStorage.removeItem(TOKEN_KEY);
         setToken(null);
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(accessToken);
     const me = await authApi.me(accessToken);
     setUser(me);
+    setTrackerToken(me.tracking_opt_in ? accessToken : null);
     return me;
   }, []);
 
@@ -72,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
+    setTrackerToken(null);
   }, []);
 
   return (
