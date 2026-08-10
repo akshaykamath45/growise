@@ -25,9 +25,6 @@ export function TopicPills({
           }`}
         >
           {t.category}
-          <span className={`ml-1.5 font-mono text-[10px] ${i === activeIndex ? "text-white/70" : "text-gw-text-placeholder"}`}>
-            {t.totalCount}
-          </span>
         </button>
       ))}
     </div>

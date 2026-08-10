@@ -76,9 +76,6 @@ export function HomeExperience({ topics }: { topics: TopicData[] }) {
                   className="px-3.5 py-1.5 rounded-full border border-gw-border-soft bg-white text-[13px] font-medium text-gw-text no-underline hover:no-underline hover:border-gw-primary-border hover:text-gw-primary-hover"
                 >
                   {t.category}
-                  <span className="ml-1.5 font-mono text-[10px] text-gw-text-placeholder">
-                    {t.totalCount}
-                  </span>
                 </Link>
               ))}
             </div>

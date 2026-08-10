@@ -12,11 +12,13 @@ function stateOf(i: number, recIndex: number): NodeState {
   return "ahead";
 }
 
-const LABEL: Record<NodeState, string> = {
-  explored: "Explored",
-  next: "Recommended",
-  ahead: "Later",
-};
+/** Nodes still ahead are labelled with their real level — more useful than "Later",
+ *  and it makes the shape of each category's path visible. */
+function labelFor(state: NodeState, level: string): string {
+  if (state === "explored") return "Explored";
+  if (state === "next") return "Recommended";
+  return level;
+}
 
 /** One journey visual: what you explored, what Growise recommends, what's beyond.
  *  This is the only place on the page a recommendation is shown. */
@@ -54,7 +56,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
                         : "text-gw-text-placeholder"
                   }`}
                 >
-                  {LABEL[state]}
+                  {labelFor(state, c.level)}
                 </span>
                 <span
                   className={`text-[13.5px] leading-snug mt-1.5 max-w-[20ch] ${
@@ -93,7 +95,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
                   {state === "next" ? "✦" : String(i + 1).padStart(2, "0")}
                 </span>
                 <div className="font-mono text-[9px] tracking-[0.14em] uppercase text-gw-text-faint pt-0.5">
-                  {LABEL[state]}
+                  {labelFor(state, c.level)}
                 </div>
                 <div
                   className={`text-[15px] mt-0.5 ${
@@ -125,8 +127,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
         </div>
 
         <p className="text-[14.5px] leading-relaxed text-gw-agent-2 mt-3 max-w-[52ch]">
-          You explored {topic.explored.map((p) => p.title).join(" and ")} — same field, rising
-          difficulty. This is the next step, not another list.
+          {topic.reason}
         </p>
 
         <div className="flex items-center gap-4 mt-5 flex-wrap">
