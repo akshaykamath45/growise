@@ -31,7 +31,7 @@ export function HeroSection({
             </Link>
             <a
               href="#how"
-              className="h-12 px-6 rounded-[10px] border border-gw-border bg-white text-[15px] font-medium leading-[48px] text-gw-text no-underline hover:no-underline hover:border-gw-primary-border hover:text-gw-primary-hover whitespace-nowrap"
+              className="h-12 px-6 rounded-[10px] border border-gw-border bg-gw-surface text-[15px] font-medium leading-[48px] text-gw-text no-underline hover:no-underline hover:border-gw-primary-border hover:text-gw-primary-text whitespace-nowrap"
             >
               See how it works
             </a>
@@ -49,7 +49,7 @@ export function HeroSection({
             height={1071}
             priority
             sizes="(max-width: 1024px) 100vw, 560px"
-            className="h-auto w-full max-w-[560px]"
+            className="home-hero-illustration h-auto w-full max-w-[560px]"
           />
         </div>
       </div>

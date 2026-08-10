@@ -21,7 +21,7 @@ export function TopicPills({
           className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border cursor-pointer transition-colors ${
             i === activeIndex
               ? "bg-gw-primary border-gw-primary text-white"
-              : "bg-white border-gw-border-soft text-gw-text hover:border-gw-primary-border hover:text-gw-primary-hover"
+              : "bg-gw-surface border-gw-border-soft text-gw-text hover:border-gw-primary-border hover:text-gw-primary-text"
           }`}
         >
           {t.category}

@@ -43,7 +43,7 @@ export function CourseCard({ product, reason }: { product: Product; reason?: str
       </div>
       <div className="p-4">
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full bg-gw-primary-soft text-gw-primary-hover font-mono text-[9.5px] tracking-wider uppercase">
+          <span className="px-2.5 py-0.5 rounded-full bg-gw-primary-soft text-gw-primary-text font-mono text-[9.5px] tracking-wider uppercase">
             {product.level}
           </span>
         </div>

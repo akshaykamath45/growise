@@ -43,7 +43,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
                       ? "bg-gw-agent-accent border-gw-agent-accent text-white"
                       : state === "explored"
                         ? "bg-gw-ink border-gw-ink text-white"
-                        : "bg-white border-gw-border text-gw-text-placeholder"
+                        : "bg-gw-surface border-gw-border text-gw-text-placeholder"
                   }`}
                 >
                   {state === "next" ? "✦" : String(i + 1).padStart(2, "0")}
@@ -90,7 +90,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
                       ? "bg-gw-agent-accent border-gw-agent-accent text-white"
                       : state === "explored"
                         ? "bg-gw-ink border-gw-ink text-white"
-                        : "bg-white border-gw-border text-gw-text-placeholder"
+                        : "bg-gw-surface border-gw-border text-gw-text-placeholder"
                   }`}
                 >
                   {state === "next" ? "✦" : String(i + 1).padStart(2, "0")}

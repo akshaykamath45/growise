@@ -70,7 +70,7 @@ export default function SignupPage() {
                 className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium border cursor-pointer transition-colors ${
                   topics.includes(c)
                     ? "bg-gw-primary border-gw-primary text-white"
-                    : "bg-white border-gw-border-soft text-gw-text hover:border-gw-primary-border"
+                    : "bg-gw-surface border-gw-border-soft text-gw-text hover:border-gw-primary-border"
                 }`}
               >
                 {c}
@@ -89,7 +89,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
-            className="w-full h-11 px-3.5 border border-gw-border rounded-[10px] text-[15px] outline-none focus:border-gw-primary-border focus:ring-[3px] focus:ring-[rgba(139,125,245,0.22)]"
+            className="w-full h-11 px-3.5 border border-gw-border rounded-[10px] bg-gw-surface text-gw-ink text-[15px] outline-none focus:border-gw-primary-border focus:ring-[3px] focus:ring-gw-focus-ring"
           />
         </div>
         <div>
@@ -100,10 +100,10 @@ export default function SignupPage() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`w-full h-11 px-3.5 border rounded-[10px] text-[15px] outline-none focus:ring-[3px] ${
+            className={`w-full h-11 px-3.5 border rounded-[10px] bg-gw-surface text-gw-ink text-[15px] outline-none focus:ring-[3px] ${
               passwordError
-                ? "border-gw-error focus:ring-[rgba(220,38,38,0.14)]"
-                : "border-gw-border focus:border-gw-primary-border focus:ring-[rgba(139,125,245,0.22)]"
+                ? "border-gw-error focus:ring-gw-error/20"
+                : "border-gw-border focus:border-gw-primary-border focus:ring-gw-focus-ring"
             }`}
           />
           {passwordError && (

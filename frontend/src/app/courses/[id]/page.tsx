@@ -47,7 +47,7 @@ export default async function CourseDetailPage({
       <div className="grid grid-cols-1 gap-10 mt-6 items-start lg:grid-cols-[minmax(0,1fr)_372px]">
         <div>
           <div className="flex gap-2.5 items-center flex-wrap">
-            <span className="px-2.5 py-1 rounded-full bg-gw-primary-soft text-gw-primary-hover font-mono text-[10px] tracking-wider uppercase">
+            <span className="px-2.5 py-1 rounded-full bg-gw-primary-soft text-gw-primary-text font-mono text-[10px] tracking-wider uppercase">
               {product.category}
             </span>
             <span className="px-2.5 py-1 rounded-full bg-gw-border-hairline text-gw-text-muted font-mono text-[10px] tracking-wider uppercase">
@@ -106,7 +106,7 @@ export default async function CourseDetailPage({
                 <div className="mt-5 grid gap-3 border-t border-gw-border-hairline pt-5 sm:grid-cols-2">
                   {product.course_content.outcomes.map((outcome) => (
                     <div key={outcome} className="flex gap-2.5 text-[13px] leading-relaxed text-gw-text">
-                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft text-[10px] font-bold text-gw-primary-hover">
+                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft text-[10px] font-bold text-gw-primary-text">
                         ✓
                       </span>
                       {outcome}

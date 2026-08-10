@@ -105,13 +105,13 @@ export default async function CoursesPage({
             {activeSort.label}
             <span className="text-gw-text-faint transition-transform group-open:rotate-180" aria-hidden>⌄</span>
           </summary>
-          <div className="absolute right-0 z-10 mt-2 w-48 overflow-hidden rounded-xl border border-gw-border-soft bg-white p-1.5 shadow-[0_12px_28px_-12px_rgba(28,30,42,0.22)]">
+          <div className="absolute right-0 z-10 mt-2 w-48 overflow-hidden rounded-xl border border-gw-border-soft bg-gw-surface p-1.5 shadow-[0_12px_28px_-12px_rgba(28,30,42,0.22)]">
             {SORT_OPTIONS.map((option) => (
               <Link
                 key={option.value}
                 href={withParams({ sort: option.value === "recommended" ? undefined : option.value })}
                 className={`block rounded-lg px-3 py-2 text-[13px] no-underline hover:no-underline ${
-                  sort === option.value ? "bg-gw-primary-soft font-semibold text-gw-primary-hover" : "text-gw-text hover:bg-gw-surface-muted"
+                  sort === option.value ? "bg-gw-primary-soft font-semibold text-gw-primary-text" : "text-gw-text hover:bg-gw-surface-muted"
                 }`}
               >
                 {option.label}
@@ -135,7 +135,7 @@ export default async function CoursesPage({
             key={item}
             href={withParams({ category: toggleValue(selectedCategories, item) })}
             className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium no-underline hover:no-underline ${
-              selectedCategories.includes(item) ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border-soft bg-gw-surface text-gw-text hover:border-gw-primary-border hover:text-gw-primary-hover"
+              selectedCategories.includes(item) ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border-soft bg-gw-surface text-gw-text hover:border-gw-primary-border hover:text-gw-primary-text"
             }`}
           >
             {item}
@@ -147,7 +147,7 @@ export default async function CoursesPage({
         <aside className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 shadow-[0_8px_24px_-20px_rgba(28,30,42,0.35)]">
           <div className="mb-5 flex items-center justify-between">
             <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Filters</div>
-            {activeFilterCount > 0 && <span className="rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[10px] text-gw-primary-hover">{activeFilterCount}</span>}
+            {activeFilterCount > 0 && <span className="rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[10px] text-gw-primary-text">{activeFilterCount}</span>}
           </div>
           <div className="mb-5">
             <div className="font-mono text-[10px] tracking-wider uppercase text-gw-text-faint mb-3">
@@ -161,10 +161,10 @@ export default async function CoursesPage({
                   role="checkbox"
                   aria-checked={selectedCategories.includes(c)}
                   className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] no-underline hover:no-underline ${
-                    selectedCategories.includes(c) ? "bg-gw-primary-soft font-medium text-gw-primary-hover" : "text-gw-text hover:bg-gw-surface-muted"
+                    selectedCategories.includes(c) ? "bg-gw-primary-soft font-medium text-gw-primary-text" : "text-gw-text hover:bg-gw-surface-muted"
                   }`}
                 >
-                  <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border text-[10px] ${selectedCategories.includes(c) ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border bg-white text-transparent"}`}>✓</span>
+                  <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border text-[10px] ${selectedCategories.includes(c) ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border bg-gw-surface text-transparent"}`}>✓</span>
                   {c}
                 </Link>
               ))}
@@ -183,10 +183,10 @@ export default async function CoursesPage({
                   role="checkbox"
                   aria-checked={selectedLevels.includes(l)}
                   className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] no-underline hover:no-underline ${
-                    selectedLevels.includes(l) ? "bg-gw-primary-soft font-medium text-gw-primary-hover" : "text-gw-text hover:bg-gw-surface-muted"
+                    selectedLevels.includes(l) ? "bg-gw-primary-soft font-medium text-gw-primary-text" : "text-gw-text hover:bg-gw-surface-muted"
                   }`}
                 >
-                  <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border text-[10px] ${selectedLevels.includes(l) ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border bg-white text-transparent"}`}>✓</span>
+                  <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border text-[10px] ${selectedLevels.includes(l) ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border bg-gw-surface text-transparent"}`}>✓</span>
                   {l}
                 </Link>
               ))}
@@ -207,10 +207,10 @@ export default async function CoursesPage({
                   role="radio"
                   aria-checked={selected}
                   className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] no-underline hover:no-underline ${
-                    selected ? "bg-gw-primary-soft font-medium text-gw-primary-hover" : "text-gw-text hover:bg-gw-surface-muted"
+                    selected ? "bg-gw-primary-soft font-medium text-gw-primary-text" : "text-gw-text hover:bg-gw-surface-muted"
                   }`}
                 >
-                  <span className={`h-4 w-4 shrink-0 rounded-full border-[5px] ${selected ? "border-gw-primary bg-white" : "border-gw-border bg-white"}`} />
+                  <span className={`h-4 w-4 shrink-0 rounded-full border-[5px] ${selected ? "border-gw-primary bg-gw-surface" : "border-gw-border bg-gw-surface"}`} />
                   {price.label}
                 </Link>
                 );
@@ -220,7 +220,7 @@ export default async function CoursesPage({
           {activeFilterCount > 0 && (
             <Link
               href={withParams({ category: undefined, level: undefined, min_price: undefined, max_price: undefined })}
-              className="mt-5 flex h-9 items-center justify-center rounded-[8px] border border-gw-border text-[12.5px] font-medium text-gw-text no-underline hover:border-gw-primary-border hover:text-gw-primary-hover"
+              className="mt-5 flex h-9 items-center justify-center rounded-[8px] border border-gw-border text-[12.5px] font-medium text-gw-text no-underline hover:border-gw-primary-border hover:text-gw-primary-text"
             >
               Clear filters
             </Link>

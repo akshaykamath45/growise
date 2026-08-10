@@ -73,7 +73,7 @@ export function HomeExperience({ topics }: { topics: TopicData[] }) {
                 <Link
                   key={t.category}
                   href={`/courses?category=${encodeURIComponent(t.category)}`}
-                  className="px-3.5 py-1.5 rounded-full border border-gw-border-soft bg-white text-[13px] font-medium text-gw-text no-underline hover:no-underline hover:border-gw-primary-border hover:text-gw-primary-hover"
+                  className="px-3.5 py-1.5 rounded-full border border-gw-border-soft bg-gw-surface text-[13px] font-medium text-gw-text no-underline hover:no-underline hover:border-gw-primary-border hover:text-gw-primary-text"
                 >
                   {t.category}
                 </Link>

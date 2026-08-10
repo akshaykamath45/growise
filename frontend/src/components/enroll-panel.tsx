@@ -147,7 +147,7 @@ export function EnrollPanel({ product }: { product: Product }) {
           </dl>
           <a
             href="#course-curriculum"
-            className="mt-4 flex items-center justify-between border-t border-gw-border-hairline pt-3.5 text-[12.5px] font-medium text-gw-primary no-underline hover:text-gw-primary-hover"
+            className="mt-4 flex items-center justify-between border-t border-gw-border-hairline pt-3.5 text-[12.5px] font-medium text-gw-primary no-underline hover:text-gw-primary-text"
           >
             Preview the curriculum <span aria-hidden>↓</span>
           </a>
@@ -158,7 +158,7 @@ export function EnrollPanel({ product }: { product: Product }) {
           <ul className="mt-3.5 flex flex-col gap-2.5" aria-label="Included with this course">
             {includes.map((item) => (
               <li key={item} className="flex items-center gap-2.5 text-[13px] text-gw-text">
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft text-[9px] font-bold text-gw-primary-hover">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft text-[9px] font-bold text-gw-primary-text">
                   ✓
                 </span>
                 {item}

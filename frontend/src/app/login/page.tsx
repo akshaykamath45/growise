@@ -72,7 +72,7 @@ function LoginForm() {
           type="button"
           onClick={() => handleDemoLogin("guest")}
           disabled={busy}
-          className="h-11 rounded-[10px] border border-gw-border bg-white text-[14.5px] font-medium text-gw-text cursor-pointer hover:border-gw-primary-border hover:text-gw-primary-hover disabled:opacity-60 disabled:cursor-default"
+          className="h-11 rounded-[10px] border border-gw-border bg-gw-surface text-[14.5px] font-medium text-gw-text cursor-pointer hover:border-gw-primary-border hover:text-gw-primary-text disabled:opacity-60 disabled:cursor-default"
         >
           {demoLoading === "guest" ? "Signing in as guest…" : "Continue as guest"}
         </button>
@@ -80,7 +80,7 @@ function LoginForm() {
           type="button"
           onClick={() => handleDemoLogin("admin")}
           disabled={busy}
-          className="h-11 rounded-[10px] border border-gw-agent-border bg-gw-agent-bg text-[14.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-[#fbe8ce] disabled:opacity-60 disabled:cursor-default"
+          className="h-11 rounded-[10px] border border-gw-agent-border bg-gw-agent-bg text-[14.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-gw-agent-hover disabled:opacity-60 disabled:cursor-default"
         >
           {demoLoading === "admin" ? "Signing in as admin…" : "Continue as admin"}
         </button>
@@ -101,7 +101,7 @@ function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
-            className="w-full h-11 px-3.5 border border-gw-border rounded-[10px] text-[15px] outline-none focus:border-gw-primary-border focus:ring-[3px] focus:ring-[rgba(139,125,245,0.22)]"
+            className="w-full h-11 px-3.5 border border-gw-border rounded-[10px] bg-gw-surface text-gw-ink text-[15px] outline-none focus:border-gw-primary-border focus:ring-[3px] focus:ring-gw-focus-ring"
           />
         </div>
         <div>
@@ -111,7 +111,7 @@ function LoginForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full h-11 px-3.5 border border-gw-border rounded-[10px] text-[15px] outline-none focus:border-gw-primary-border focus:ring-[3px] focus:ring-[rgba(139,125,245,0.22)]"
+            className="w-full h-11 px-3.5 border border-gw-border rounded-[10px] bg-gw-surface text-gw-ink text-[15px] outline-none focus:border-gw-primary-border focus:ring-[3px] focus:ring-gw-focus-ring"
           />
         </div>
 

@@ -28,9 +28,9 @@ function numberField(value: string): number {
 }
 
 const inputClass =
-  "w-full px-3 h-10 border border-gw-border rounded-[9px] text-sm outline-none bg-white focus:border-gw-primary-border";
+  "w-full px-3 h-10 border border-gw-border rounded-[9px] text-sm outline-none bg-gw-surface text-gw-ink focus:border-gw-primary-border";
 const textareaClass =
-  "w-full px-3 py-2.5 border border-gw-border rounded-[9px] text-sm outline-none bg-white focus:border-gw-primary-border";
+  "w-full px-3 py-2.5 border border-gw-border rounded-[9px] text-sm outline-none bg-gw-surface text-gw-ink focus:border-gw-primary-border";
 
 export default function AdminCoursesPage() {
   const { user, token, loading } = useAuth();

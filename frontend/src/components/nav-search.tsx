@@ -137,8 +137,8 @@ export function NavSearch() {
       <div
         className={`flex h-9 items-center gap-2.5 rounded-[9px] border px-3 transition-colors ${
           focused
-            ? "border-gw-primary-border bg-white"
-            : "border-gw-border-soft bg-gw-surface-muted hover:bg-white"
+            ? "border-gw-primary-border bg-gw-surface"
+            : "border-gw-border-soft bg-gw-surface-muted hover:bg-gw-surface"
         }`}
       >
         <SearchIcon />
@@ -168,14 +168,14 @@ export function NavSearch() {
           className="flex-1 bg-transparent text-[13.5px] outline-none placeholder:text-gw-text-placeholder"
         />
         {!focused && !query && (
-          <kbd className="hidden shrink-0 rounded border border-gw-border-soft bg-white px-1.5 py-0.5 font-mono text-[10px] text-gw-text-placeholder lg:inline-block">
+          <kbd className="hidden shrink-0 rounded border border-gw-border-soft bg-gw-surface px-1.5 py-0.5 font-mono text-[10px] text-gw-text-placeholder lg:inline-block">
             {shortcutLabel}
           </kbd>
         )}
       </div>
 
       {showDropdown && (
-        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-xl border border-gw-border-soft bg-white shadow-[0_16px_32px_-12px_rgba(28,30,42,0.22)]">
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-xl border border-gw-border-soft bg-gw-surface shadow-[0_16px_32px_-12px_rgba(28,30,42,0.22)]">
           {suggestions.length > 0 ? (
             <>
               <div className="px-3.5 pt-3 pb-1.5 font-mono text-[9.5px] tracking-[0.14em] uppercase text-gw-text-faint">

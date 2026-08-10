@@ -2,7 +2,7 @@ import { Reveal } from "@/components/reveal";
 import { initials, type InstructorSummary } from "./instructors";
 
 const AVATAR_TONES = [
-  { bg: "bg-gw-primary-soft", text: "text-gw-primary-hover" },
+  { bg: "bg-gw-primary-soft", text: "text-gw-primary-text" },
   { bg: "bg-gw-agent-bg", text: "text-gw-agent-2" },
 ];
 

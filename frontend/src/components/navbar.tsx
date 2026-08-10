@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { NavSearch } from "@/components/nav-search";
+import { useTheme } from "@/components/theme-provider";
 
 function initials(email: string) {
   return email.slice(0, 2).toUpperCase();
@@ -19,12 +20,15 @@ function displayName(email: string) {
 
 export function Navbar() {
   const { user, logout, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const signOutTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen || signingOut) return;
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
@@ -32,7 +36,22 @@ export function Navbar() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
+  }, [menuOpen, signingOut]);
+
+  useEffect(() => {
+    return () => {
+      if (signOutTimer.current !== null) window.clearTimeout(signOutTimer.current);
+    };
+  }, []);
+
+  function handleLogout() {
+    if (signingOut) return;
+    setSigningOut(true);
+    signOutTimer.current = window.setTimeout(() => {
+      setMenuOpen(false);
+      logout();
+    }, 2000);
+  }
 
   if (pathname === "/login" || pathname === "/signup") return null;
 
@@ -55,7 +74,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-20 h-16 border-b border-gw-border-soft bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-20 h-16 border-b border-gw-border-soft bg-gw-surface/90 backdrop-blur">
       <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2 no-underline hover:no-underline">
           <span className="inline-block h-5 w-5 rounded-md bg-gw-primary" />
@@ -74,19 +93,39 @@ export function Navbar() {
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[8px] border border-gw-border-soft bg-gw-surface-muted text-gw-text-muted transition-colors hover:border-gw-primary-border hover:bg-gw-primary-soft hover:text-gw-primary-text"
+          >
+            {theme === "dark" ? (
+              <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+                <circle cx="12" cy="12" r="3.5" />
+                <path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4M18.7 18.7l-1.4-1.4M6.7 6.7 5.3 5.3" />
+              </svg>
+            ) : (
+              <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+                <path d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8 8.5 8.5 0 1 0 20.2 15.2Z" />
+              </svg>
+            )}
+          </button>
+
           {loading ? null : user ? (
             <>
               {navLink("/my-learning", "My learning")}
 
               <div className="relative ml-1" ref={menuRef}>
                 <button
-                  onClick={() => setMenuOpen((v) => !v)}
+                  onClick={() => !signingOut && setMenuOpen((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                   aria-label="Account menu"
-                  className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0"
+                  className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 disabled:cursor-default"
+                  disabled={signingOut}
                 >
-                  <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gw-primary-soft text-[12.5px] font-semibold text-gw-primary-hover">
+                  <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gw-primary-soft text-[12.5px] font-semibold text-gw-primary-text">
                     {initials(user.email)}
                   </span>
                   <span className="text-[10px] text-gw-text-placeholder" aria-hidden>
@@ -97,7 +136,7 @@ export function Navbar() {
                 {menuOpen && (
                   <div
                     role="menu"
-                    className="absolute right-0 top-[42px] z-30 w-56 overflow-hidden rounded-xl border border-gw-border-soft bg-white py-1.5 shadow-[0_16px_32px_-12px_rgba(28,30,42,0.22)]"
+                    className="absolute right-0 top-[42px] z-30 w-56 overflow-hidden rounded-xl border border-gw-border-soft bg-gw-surface py-1.5 shadow-[0_16px_32px_-12px_rgba(28,30,42,0.22)]"
                   >
                     <div className="border-b border-gw-border-hairline px-3.5 py-2.5">
                       <div className="text-[13px] font-semibold text-gw-ink">
@@ -127,13 +166,18 @@ export function Navbar() {
                     )}
                     <button
                       role="menuitem"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        logout();
-                      }}
-                      className="w-full cursor-pointer border-0 bg-transparent px-3.5 py-2.5 text-left text-sm text-gw-error hover:bg-gw-surface-muted"
+                      onClick={handleLogout}
+                      disabled={signingOut}
+                      aria-busy={signingOut}
+                      className="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-2.5 text-left text-sm text-gw-error hover:bg-gw-surface-muted disabled:cursor-default disabled:bg-gw-surface-muted"
                     >
-                      Log out
+                      {signingOut && (
+                        <span
+                          aria-hidden
+                          className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gw-error/25 border-t-gw-error"
+                        />
+                      )}
+                      <span aria-live="polite">{signingOut ? "Signing out…" : "Log out"}</span>
                     </button>
                   </div>
                 )}
@@ -143,13 +187,13 @@ export function Navbar() {
             <>
               <Link
                 href="/login"
-                className="px-2 text-sm font-medium text-gw-text no-underline hover:no-underline hover:text-gw-ink"
+                className="flex h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3.5 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="flex h-9 items-center rounded-[8px] bg-gw-primary-hover px-[18px] text-sm font-medium text-white no-underline hover:bg-gw-primary hover:no-underline"
+                className="flex h-9 items-center rounded-[8px] bg-gw-primary px-[18px] text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline"
               >
                 Sign up
               </Link>

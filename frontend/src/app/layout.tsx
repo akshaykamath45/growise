@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { Navbar } from "@/components/navbar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +31,32 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => {
+              try {
+                const saved = localStorage.getItem("growise-theme");
+                const theme = saved === "dark" || saved === "light"
+                  ? saved
+                  : matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+              } catch (_) {}
+            })();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-gw-bg text-gw-ink">
-        <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

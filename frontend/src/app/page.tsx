@@ -72,7 +72,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/signup"
-              className="inline-block mt-8 h-12 px-7 rounded-[10px] bg-white text-gw-deep text-[15px] font-semibold leading-[48px] no-underline hover:no-underline hover:bg-gw-primary-soft"
+              className="inline-block mt-8 h-12 px-7 rounded-[10px] bg-gw-surface text-gw-ink text-[15px] font-semibold leading-[48px] no-underline hover:no-underline hover:bg-gw-primary-soft"
             >
               Start learning
             </Link>

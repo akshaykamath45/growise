@@ -21,7 +21,7 @@ export function CourseCurriculum({ content }: { content: CourseContent }) {
         {content.sections.map((section, index) => (
           <details key={section.title} open={index === 0} className="group border-b border-gw-border-hairline last:border-0">
             <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 marker:content-none hover:bg-gw-surface-muted">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft font-mono text-[10.5px] text-gw-primary-hover">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft font-mono text-[10.5px] text-gw-primary-text">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 flex-1">

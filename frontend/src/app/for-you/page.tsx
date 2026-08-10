@@ -85,7 +85,7 @@ export default function ForYouPage() {
           </a>
         </div>
       ) : (
-        <div className="bg-white border border-gw-border-soft rounded-2xl overflow-hidden mt-8 shadow-[0_1px_2px_rgba(28,30,42,0.05)]">
+        <div className="bg-gw-surface border border-gw-border-soft rounded-2xl overflow-hidden mt-8 shadow-[0_1px_2px_rgba(28,30,42,0.05)]">
           <div className="bg-gw-agent-bg border-b border-gw-agent-border px-8 py-7">
             <div className="flex items-center gap-2.5">
               <span className="relative w-[22px] h-[22px] flex items-center justify-center">
@@ -101,7 +101,7 @@ export default function ForYouPage() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="ml-auto h-[30px] px-3 rounded-lg border border-gw-agent-border bg-transparent text-[12.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-[#fbe8ce] disabled:opacity-60"
+                className="ml-auto h-[30px] px-3 rounded-lg border border-gw-agent-border bg-transparent text-[12.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-gw-agent-hover disabled:opacity-60"
               >
                 {refreshing ? "Refreshing…" : "Refresh"}
               </button>
@@ -114,7 +114,7 @@ export default function ForYouPage() {
                 {rec.evidence.map((ev) => (
                   <span
                     key={ev}
-                    className="px-2.5 py-1 rounded-full border border-gw-agent-border bg-white/60 font-mono text-[10.5px] tracking-wide text-gw-agent-2"
+                    className="px-2.5 py-1 rounded-full border border-gw-agent-border bg-gw-surface/60 font-mono text-[10.5px] tracking-wide text-gw-agent-2"
                   >
                     {ev}
                   </span>

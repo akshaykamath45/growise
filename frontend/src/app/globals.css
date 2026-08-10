@@ -18,7 +18,9 @@
   --gw-primary: #5a47dc;
   --gw-primary-hover: #4a38b8;
   --gw-primary-soft: #e0e3ff;
+  --gw-primary-text: #4a38b8;
   --gw-primary-border: #a3a9fc;
+  --gw-focus-ring: rgb(90 71 220 / 22%);
 
   --gw-agent: #b96e18;
   --gw-agent-2: #94560f;
@@ -26,6 +28,7 @@
   --gw-agent-border: #f7d3a1;
   --gw-agent-accent: #eba243;
   --gw-agent-icon-border: #f2b96c;
+  --gw-agent-hover: #fbe8ce;
 
   --gw-success: #16a34a;
   --gw-error: #dc2626;
@@ -38,6 +41,45 @@
 
   --background: var(--gw-bg);
   --foreground: var(--gw-ink);
+}
+
+/* A deliberate night palette, rather than an inverted light theme. Every UI
+   surface draws from these semantic tokens so pages change as one system. */
+:root[data-theme="dark"] {
+  --gw-bg: #0d111a;
+  --gw-surface: #171c28;
+  --gw-surface-muted: #202737;
+  --gw-ink: #f4f2f8;
+  --gw-ink-2: #e2e1eb;
+  --gw-text: #c6c8d6;
+  --gw-text-muted: #aeb2c2;
+  --gw-text-faint: #969caf;
+  --gw-text-placeholder: #7d8499;
+  --gw-border: #394154;
+  --gw-border-soft: #2a3142;
+  --gw-border-hairline: #242b3b;
+
+  --gw-primary: #7165db;
+  --gw-primary-hover: #6156c5;
+  --gw-primary-soft: #2d275f;
+  --gw-primary-text: #b9b2ff;
+  --gw-primary-border: #6760ba;
+  --gw-focus-ring: rgb(155 144 255 / 26%);
+
+  --gw-agent: #f1bd70;
+  --gw-agent-2: #f3d2a3;
+  --gw-agent-bg: #2c2117;
+  --gw-agent-border: #634424;
+  --gw-agent-accent: #efad52;
+  --gw-agent-icon-border: #ba7b32;
+  --gw-agent-hover: #3a2a1a;
+
+  --gw-success: #5ee58c;
+  --gw-error: #ff8696;
+
+  --gw-paper: #111722;
+  --gw-deep: #1d1a47;
+  --gw-deep-2: #151233;
 }
 
 @theme inline {
@@ -60,7 +102,9 @@
   --color-gw-primary: var(--gw-primary);
   --color-gw-primary-hover: var(--gw-primary-hover);
   --color-gw-primary-soft: var(--gw-primary-soft);
+  --color-gw-primary-text: var(--gw-primary-text);
   --color-gw-primary-border: var(--gw-primary-border);
+  --color-gw-focus-ring: var(--gw-focus-ring);
 
   --color-gw-agent: var(--gw-agent);
   --color-gw-agent-2: var(--gw-agent-2);
@@ -68,6 +112,7 @@
   --color-gw-agent-border: var(--gw-agent-border);
   --color-gw-agent-accent: var(--gw-agent-accent);
   --color-gw-agent-icon-border: var(--gw-agent-icon-border);
+  --color-gw-agent-hover: var(--gw-agent-hover);
 
   --color-gw-success: var(--gw-success);
   --color-gw-error: var(--gw-error);
@@ -119,6 +164,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+:root[data-theme="dark"] body {
+  color-scheme: dark;
+}
+
+/* The source artwork is intentionally light for the default experience. In
+   dark mode it becomes a softly illuminated preview rather than a bright slab. */
+:root[data-theme="dark"] .home-hero-illustration {
+  filter: brightness(0.58) contrast(1.12) saturate(0.9);
+  border: 1px solid var(--gw-border-soft);
+  border-radius: 1rem;
+  box-shadow: 0 22px 48px -30px rgb(0 0 0 / 70%);
+}
+
+::selection {
+  background: var(--gw-primary);
+  color: var(--gw-surface);
+}
+
 /* The cover belongs in the purchase rail on desktop, but remains inline on small screens. */
 @media (min-width: 1024px) {
   .course-mobile-cover {
@@ -131,6 +194,6 @@ body {
     color: var(--gw-primary);
   }
   a:hover {
-    color: var(--gw-primary-hover);
+    color: var(--gw-primary-text);
   }
 }
