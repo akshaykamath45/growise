@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
-import { MinimalAuthLayout } from "@/components/minimal-auth-layout";
+import { AuthSplitLayout } from "@/components/auth-split-layout";
 
 const DEMO_ACCOUNTS = {
   guest: { email: "taylor@example.com", password: "TaylorPass123" },
@@ -64,8 +64,9 @@ function LoginForm() {
 
   return (
     <>
-      <h1 className="text-[22px] font-semibold tracking-tight leading-tight text-center">Welcome back</h1>
-      <p className="mt-1.5 text-[14px] text-gw-text-muted text-center">Continue where you left off.</p>
+      <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-primary-text">Welcome back</div>
+      <h1 className="mt-2 font-serif text-[30px] leading-tight tracking-tight text-gw-ink">Continue your learning.</h1>
+      <p className="mt-2 text-[14px] text-gw-text-muted">Your saved courses and recommendations are waiting.</p>
 
       <div className="flex flex-col gap-2.5 mt-6">
         <button
@@ -126,7 +127,7 @@ function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-[13.5px] text-gw-text-muted text-center">
+      <p className="mt-6 text-[13.5px] text-gw-text-muted">
         New to Growise?{" "}
         <Link href="/signup" className="font-medium">
           Create an account
@@ -138,7 +139,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <MinimalAuthLayout>
+    <AuthSplitLayout
+      eyebrow="Pick up where you left off"
+      title="The next step in your learning path is still here."
+      description="Sign in to return to your courses, progress, and recommendations shaped around what you explore."
+    >
       <Suspense
         fallback={
           <div className="py-8 text-center text-[14px] text-gw-text-muted">Loading…</div>
@@ -146,6 +151,6 @@ export default function LoginPage() {
       >
         <LoginForm />
       </Suspense>
-    </MinimalAuthLayout>
+    </AuthSplitLayout>
   );
 }

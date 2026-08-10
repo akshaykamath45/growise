@@ -47,7 +47,11 @@ export default function SignupPage() {
   }
 
   return (
-    <AuthSplitLayout>
+    <AuthSplitLayout
+      eyebrow="Learning that adapts to you"
+      title="Growise notices what you explore and tells you what’s next."
+      description="Start with the subjects that matter to you, then let your learning path become more useful with every step."
+    >
       <h1 className="text-[26px] font-semibold tracking-tight leading-tight">Start learning</h1>
       <p className="mt-2 text-[14px] text-gw-text-muted">
         Already have an account?{" "}

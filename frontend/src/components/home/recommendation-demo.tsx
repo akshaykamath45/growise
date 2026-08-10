@@ -147,7 +147,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
         </div>
       </div>
 
-        <div className="hidden lg:flex lg:justify-end">
+        <div className="recommendation-art hidden lg:flex lg:justify-end">
           <Image
             src="/recommendation.png"
             alt=""
@@ -155,7 +155,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
             width={1477}
             height={1065}
             sizes="520px"
-            className="h-auto w-full max-w-[520px]"
+            className="recommendation-art-image h-auto w-full max-w-[520px]"
           />
         </div>
       </div>

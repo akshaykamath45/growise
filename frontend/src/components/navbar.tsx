@@ -53,7 +53,7 @@ export function Navbar() {
     }, 2000);
   }
 
-  if (pathname === "/login" || pathname === "/signup") return null;
+  const isAuthPage = pathname === "/login" || pathname === "/signup";
 
   const navLink = (href: string, label: string, dot?: boolean) => {
     const active = pathname === href;
@@ -184,20 +184,38 @@ export function Navbar() {
               </div>
             </>
           ) : (
-            <>
-              <Link
-                href="/login"
-                className="flex h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3.5 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                className="flex h-9 items-center rounded-[8px] bg-gw-primary px-[18px] text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline"
-              >
-                Sign up
-              </Link>
-            </>
+            isAuthPage ? (
+              pathname === "/login" ? (
+                <Link
+                  href="/signup"
+                  className="flex h-9 items-center rounded-[8px] bg-gw-primary px-[18px] text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline"
+                >
+                  Sign up
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3.5 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline"
+                >
+                  Log in
+                </Link>
+              )
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="flex h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3.5 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="flex h-9 items-center rounded-[8px] bg-gw-primary px-[18px] text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline"
+                >
+                  Sign up
+                </Link>
+              </>
+            )
           )}
         </div>
       </div>

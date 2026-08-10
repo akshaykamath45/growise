@@ -41,7 +41,7 @@ export function HeroSection({
           </div>
         </div>
 
-        <div className="flex lg:justify-end">
+        <div className="home-hero-frame flex lg:justify-end">
           <Image
             src="/hero-section-right.png"
             alt="Growise course categories connected around a personalised recommendation"
