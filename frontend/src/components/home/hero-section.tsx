@@ -42,15 +42,17 @@ export function HeroSection({
         </div>
 
         <div className="home-hero-frame flex lg:justify-end">
-          <Image
-            src="/hero-section-right.png"
-            alt="Growise course categories connected around a personalised recommendation"
-            width={1469}
-            height={1071}
-            priority
-            sizes="(max-width: 1024px) 100vw, 560px"
-            className="home-hero-illustration h-auto w-full max-w-[560px]"
-          />
+          <div className="home-hero-art">
+            <Image
+              src="/hero-section-right.png"
+              alt="Growise course categories connected around a personalised recommendation"
+              width={1469}
+              height={1071}
+              priority
+              sizes="(max-width: 1024px) 100vw, 600px"
+              className="home-hero-illustration"
+            />
+          </div>
         </div>
       </div>
     </section>

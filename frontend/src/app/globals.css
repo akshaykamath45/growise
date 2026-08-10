@@ -168,10 +168,38 @@ body {
   color-scheme: dark;
 }
 
-/* The source hero is intentionally light. In dark mode it becomes an illuminated
-   violet-blue map—bright enough to feel alive, but restrained by the night frame. */
-:root[data-theme="dark"] .home-hero-frame {
+:root:not([data-theme="dark"]) .home-hero-illustration {
+  /* The PNG has a white canvas; this brings it into the hero's warm paper tone. */
+  filter: brightness(0.988);
+}
+
+.home-hero-frame {
   position: relative;
+  width: 100%;
+}
+
+.home-hero-art {
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: var(--gw-paper);
+}
+
+.home-hero-illustration {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.16);
+  transform-origin: 51% 50%;
+}
+
+/* The source hero is intentionally light. In dark mode it becomes an illuminated
+   violet-blue map that blends into the night hero instead of sitting in a grey card. */
+:root[data-theme="dark"] .home-hero-frame {
   isolation: isolate;
 }
 
@@ -189,10 +217,13 @@ body {
 }
 
 :root[data-theme="dark"] .home-hero-illustration {
-  filter: brightness(0.82) contrast(1.1) saturate(1.28);
-  border: 1px solid rgb(126 116 237 / 48%);
-  border-radius: 1.25rem;
-  box-shadow: 0 26px 56px -34px rgb(0 0 0 / 82%), 0 0 0 1px rgb(126 116 237 / 12%);
+  filter: invert(1) hue-rotate(180deg) saturate(1.24) brightness(0.96);
+  mix-blend-mode: screen;
+}
+
+:root[data-theme="dark"] .home-hero-art {
+  background: var(--gw-paper);
+  box-shadow: 0 26px 56px -34px rgb(0 0 0 / 82%);
 }
 
 /* In dark mode, crop past the empty edges of the recommendation artwork and
