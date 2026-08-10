@@ -7,6 +7,13 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
 import { AuthSplitLayout } from "@/components/auth-split-layout";
 
+const DEMO_ACCOUNTS = {
+  guest: { email: "taylor@example.com", password: "TaylorPass123" },
+  admin: { email: "admin@growise.dev", password: "AdminPass123" },
+} as const;
+
+type DemoKind = keyof typeof DEMO_ACCOUNTS;
+
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
@@ -14,20 +21,37 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<DemoKind | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function performLogin(loginEmail: string, loginPassword: string) {
     setError(null);
-    setSubmitting(true);
     try {
-      const user = await login(email, password);
+      const user = await login(loginEmail, loginPassword);
       router.push(user.role === "admin" ? "/admin/courses" : "/courses");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
-    } finally {
-      setSubmitting(false);
     }
   }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    await performLogin(email, password);
+    setSubmitting(false);
+  }
+
+  async function handleDemoLogin(kind: DemoKind) {
+    const account = DEMO_ACCOUNTS[kind];
+    setError(null);
+    setDemoLoading(kind);
+    setEmail(account.email);
+    setPassword(account.password);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await performLogin(account.email, account.password);
+    setDemoLoading(null);
+  }
+
+  const busy = submitting || demoLoading !== null;
 
   return (
     <AuthSplitLayout>
@@ -39,7 +63,32 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-6">
+      <div className="flex flex-col gap-2.5 mt-6">
+        <button
+          type="button"
+          onClick={() => handleDemoLogin("guest")}
+          disabled={busy}
+          className="h-11 rounded-[10px] border border-gw-border bg-white text-[14.5px] font-medium text-gw-text cursor-pointer hover:border-gw-primary-border hover:text-gw-primary-hover disabled:opacity-60 disabled:cursor-default"
+        >
+          {demoLoading === "guest" ? "Signing in as guest…" : "Continue as guest"}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDemoLogin("admin")}
+          disabled={busy}
+          className="h-11 rounded-[10px] border border-gw-agent-border bg-gw-agent-bg text-[14.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-[#fbe8ce] disabled:opacity-60 disabled:cursor-default"
+        >
+          {demoLoading === "admin" ? "Signing in as admin…" : "Continue as admin"}
+        </button>
+      </div>
+
+      <div className="flex items-center gap-3.5 my-6">
+        <div className="flex-1 h-px bg-gw-border-soft" />
+        <div className="font-mono text-[10px] tracking-[0.12em] text-gw-text-placeholder">OR</div>
+        <div className="flex-1 h-px bg-gw-border-soft" />
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="block text-[13px] font-medium text-gw-text mb-1.5">Email</label>
           <input
@@ -66,16 +115,12 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={busy}
           className="h-11 mt-1 rounded-[10px] bg-gw-primary text-white text-[15px] font-medium border-0 cursor-pointer hover:bg-gw-primary-hover disabled:opacity-60"
         >
           {submitting ? "Logging in…" : "Log in"}
         </button>
       </form>
-
-      <p className="mt-6 text-xs text-gw-text-faint">
-        Admin demo account: <code>admin@growise.dev</code> / <code>AdminPass123</code>
-      </p>
     </AuthSplitLayout>
   );
 }

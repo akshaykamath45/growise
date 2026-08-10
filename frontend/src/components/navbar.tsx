@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { track } from "@/lib/tracker";
 
@@ -15,6 +15,23 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   if (pathname === "/login" || pathname === "/signup") return null;
 
@@ -65,16 +82,35 @@ export function Navbar() {
 
         <div className="ml-auto flex items-center gap-4">
           {loading ? null : user ? (
-            <>
-              <span className="text-xs text-gw-text-faint hidden sm:inline">{user.email}</span>
+            <div className="relative" ref={menuRef}>
               <button
-                onClick={logout}
-                className="w-[30px] h-[30px] rounded-full bg-gw-primary-soft text-gw-primary-hover flex items-center justify-center text-[12.5px] font-semibold cursor-pointer border-0"
-                title="Log out"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex items-center gap-2.5 bg-transparent border-0 cursor-pointer"
               >
-                {initials(user.email)}
+                <span className="text-xs text-gw-text-faint hidden sm:inline">{user.email}</span>
+                <span className="w-[30px] h-[30px] rounded-full bg-gw-primary-soft text-gw-primary-hover flex items-center justify-center text-[12.5px] font-semibold">
+                  {initials(user.email)}
+                </span>
               </button>
-            </>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-[42px] w-52 bg-white border border-gw-border-soft rounded-xl shadow-[0_10px_24px_-8px_rgba(28,30,42,0.2)] py-1.5 z-30">
+                  <div className="px-3.5 py-2.5 border-b border-gw-border-hairline">
+                    <div className="text-[13px] font-medium text-gw-ink truncate">{user.email}</div>
+                    <div className="text-[11px] text-gw-text-faint capitalize mt-0.5">{user.role} account</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      logout();
+                    }}
+                    className="w-full text-left px-3.5 py-2.5 text-sm text-gw-error bg-transparent border-0 cursor-pointer hover:bg-gw-surface-muted"
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link href="/login" className="text-sm font-medium text-gw-text no-underline hover:no-underline">

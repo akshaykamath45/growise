@@ -19,6 +19,7 @@ const EMPTY_FORM: ProductInput = {
   rating: 4.5,
   reviews_count: 0,
   tags: "",
+  image_url: null,
 };
 
 function numberField(value: string): number {
@@ -81,6 +82,7 @@ export default function AdminCoursesPage() {
       rating: p.rating,
       reviews_count: p.reviews_count,
       tags: p.tags,
+      image_url: p.image_url,
     });
     setError(null);
     setFormOpen(true);
@@ -313,6 +315,14 @@ export default function AdminCoursesPage() {
                 <input
                   value={form.tags}
                   onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Cover image URL (optional)">
+                <input
+                  value={form.image_url ?? ""}
+                  onChange={(e) => setForm({ ...form, image_url: e.target.value || null })}
+                  placeholder="/static/covers/1.jpg or https://..."
                   className={inputClass}
                 />
               </Field>

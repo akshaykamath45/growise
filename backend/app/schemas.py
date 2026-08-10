@@ -45,6 +45,7 @@ class ProductBase(BaseModel):
     rating: float = 4.5
     reviews_count: int = 0
     tags: str = ""
+    image_url: str | None = None
 
 
 class ProductCreate(ProductBase):
@@ -64,6 +65,7 @@ class ProductUpdate(BaseModel):
     rating: float | None = None
     reviews_count: int | None = None
     tags: str | None = None
+    image_url: str | None = None
 
 
 class ProductOut(ProductBase):

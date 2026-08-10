@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ApiError, productsApi } from "@/lib/api";
+import { API_URL, ApiError, productsApi } from "@/lib/api";
 import { TrackProductView } from "@/components/track-product-view";
 import { EnrollPanel } from "@/components/enroll-panel";
 
@@ -55,6 +55,15 @@ export default async function CourseDetailPage({
           </div>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight leading-tight">{product.title}</h1>
           <p className="mt-3.5 text-[17px] leading-relaxed text-gw-text max-w-[64ch]">{product.description}</p>
+
+          {product.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`${API_URL}${product.image_url}`}
+              alt={product.title}
+              className="mt-6 w-full aspect-video object-cover rounded-2xl border border-gw-border-soft"
+            />
+          )}
 
           <div className="mt-5 flex items-center gap-3.5 flex-wrap text-sm">
             <span className="font-medium">{product.instructor}</span>

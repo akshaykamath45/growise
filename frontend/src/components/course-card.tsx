@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { track } from "@/lib/tracker";
+import { API_URL } from "@/lib/api";
 
 const coverStyle: React.CSSProperties = {
   backgroundImage:
@@ -10,6 +12,9 @@ const coverStyle: React.CSSProperties = {
 };
 
 export function CourseCard({ product, reason }: { product: Product; reason?: string }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = product.image_url && !imageFailed;
+
   return (
     <Link
       href={`/courses/${product.id}`}
@@ -18,10 +23,23 @@ export function CourseCard({ product, reason }: { product: Product; reason?: str
       }
       className="group block rounded-xl border border-gw-border-soft bg-gw-surface overflow-hidden no-underline hover:no-underline hover:border-gw-border hover:shadow-[0_10px_24px_-12px_rgba(28,30,42,0.2)] transition-all"
     >
-      <div style={coverStyle} className="aspect-video flex items-center justify-center">
-        <span className="font-mono text-[10px] tracking-wider text-gw-text-placeholder uppercase">
-          {product.category}
-        </span>
+      <div className="aspect-video overflow-hidden">
+        {showImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`${API_URL}${product.image_url}`}
+            alt={product.title}
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+          />
+        ) : (
+          <div style={coverStyle} className="w-full h-full flex items-center justify-center">
+            <span className="font-mono text-[10px] tracking-wider text-gw-text-placeholder uppercase">
+              {product.category}
+            </span>
+          </div>
+        )}
       </div>
       <div className="p-4">
         <div className="flex items-center gap-2">

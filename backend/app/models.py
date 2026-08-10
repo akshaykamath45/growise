@@ -57,6 +57,7 @@ class Product(Base):
     rating: Mapped[float] = mapped_column(Float, default=4.5)
     reviews_count: Mapped[int] = mapped_column(Integer, default=0)
     tags: Mapped[str] = mapped_column(String(500), default="")  # comma-separated
+    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     vector_synced: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

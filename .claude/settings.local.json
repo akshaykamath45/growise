@@ -5,7 +5,9 @@
       "Bash(npx --yes create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack)",
       "Bash(rm -rf /Users/akshaykamath/Desktop/smart-reco-hackathon/frontend/.git)",
       "Bash(kill %1)",
-      "Bash(pkill -f \"pip install sentence-transformers\")"
+      "Bash(pkill -f \"pip install sentence-transformers\")",
+      "Bash(curl -s http://127.0.0.1:8000/api/health)",
+      "Read(//private/tmp/**)"
     ]
   }
 }

@@ -21,6 +21,7 @@ export interface Product {
   rating: number;
   reviews_count: number;
   tags: string;
+  image_url: string | null;
   vector_synced: boolean;
   created_at: string;
 }
