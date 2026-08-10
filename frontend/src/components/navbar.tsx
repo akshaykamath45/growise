@@ -23,21 +23,9 @@ export function Navbar() {
   const { user, logout, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDetailsElement>(null);
   const signOutTimer = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!menuOpen || signingOut) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen, signingOut]);
 
   useEffect(() => {
     return () => {
@@ -45,11 +33,16 @@ export function Navbar() {
     };
   }, []);
 
+  // A client-side login swaps the account controls in place while navigation is
+  // still settling. Close any inherited disclosure state when that session changes.
+  useEffect(() => {
+    accountMenuRef.current?.removeAttribute("open");
+  }, [user?.id]);
+
   function handleLogout() {
     if (signingOut) return;
     setSigningOut(true);
     signOutTimer.current = window.setTimeout(() => {
-      setMenuOpen(false);
       logout();
     }, 2000);
   }
@@ -118,28 +111,27 @@ export function Navbar() {
             <>
               <span className="hidden sm:contents">{navLink("/my-learning", "My learning")}</span>
 
-              <div className="relative ml-1" ref={menuRef}>
-                <button
-                  onClick={() => !signingOut && setMenuOpen((v) => !v)}
+              <details className="group relative ml-1" ref={accountMenuRef}>
+                <summary
+                  onClick={(event) => {
+                    if (signingOut) event.preventDefault();
+                  }}
                   aria-haspopup="menu"
-                  aria-expanded={menuOpen}
                   aria-label="Account menu"
-                  className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 disabled:cursor-default"
-                  disabled={signingOut}
+                  className="flex cursor-pointer list-none items-center gap-1 marker:content-none"
                 >
                   <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gw-primary-soft text-[12.5px] font-semibold text-gw-primary-text">
                     {initials(user.email)}
                   </span>
-                  <span className="text-[10px] text-gw-text-placeholder" aria-hidden>
+                  <span className="text-[10px] text-gw-text-placeholder transition-transform group-open:rotate-180" aria-hidden>
                     ▾
                   </span>
-                </button>
+                </summary>
 
-                {menuOpen && (
-                  <div
-                    role="menu"
-                    className="absolute right-0 top-[42px] z-30 w-56 overflow-hidden rounded-xl border border-gw-border-soft bg-gw-surface py-1.5 shadow-[0_16px_32px_-12px_rgba(28,30,42,0.22)]"
-                  >
+                <div
+                  role="menu"
+                  className="absolute right-0 top-[42px] z-30 hidden w-56 overflow-hidden rounded-xl border border-gw-border-soft bg-gw-surface py-1.5 shadow-[0_16px_32px_-12px_rgba(28,30,42,0.22)] group-open:block"
+                >
                     <div className="border-b border-gw-border-hairline px-3.5 py-2.5">
                       <div className="text-[13px] font-semibold text-gw-ink">
                         {displayName(user.email)}
@@ -151,7 +143,7 @@ export function Navbar() {
                     <Link
                       href="/my-learning"
                       role="menuitem"
-                      onClick={() => setMenuOpen(false)}
+                      onClick={() => accountMenuRef.current?.removeAttribute("open")}
                       className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline"
                     >
                       My learning
@@ -160,7 +152,7 @@ export function Navbar() {
                       <Link
                         href="/admin/courses"
                         role="menuitem"
-                        onClick={() => setMenuOpen(false)}
+                        onClick={() => accountMenuRef.current?.removeAttribute("open")}
                         className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline"
                       >
                         Course admin
@@ -181,9 +173,8 @@ export function Navbar() {
                       )}
                       <span aria-live="polite">{signingOut ? "Signing out…" : "Log out"}</span>
                     </button>
-                  </div>
-                )}
-              </div>
+                </div>
+              </details>
             </>
           ) : (
             isAuthPage ? (

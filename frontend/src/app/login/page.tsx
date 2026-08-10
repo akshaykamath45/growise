@@ -31,11 +31,17 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [demoLoading, setDemoLoading] = useState<DemoKind | null>(null);
+  const [openingLearning, setOpeningLearning] = useState(false);
 
   async function performLogin(loginEmail: string, loginPassword: string) {
     setError(null);
     try {
       const user = await login(loginEmail, loginPassword);
+      setOpeningLearning(true);
+      // Give the successful auth handoff a clear, stable moment before changing
+      // routes. This prevents the newly rendered navigation from feeling ready
+      // before its destination has settled.
+      await new Promise((resolve) => window.setTimeout(resolve, 450));
       router.push(next ?? (user.role === "admin" ? "/admin/courses" : "/courses"));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
@@ -60,7 +66,7 @@ function LoginForm() {
     setDemoLoading(null);
   }
 
-  const busy = submitting || demoLoading !== null;
+  const busy = submitting || demoLoading !== null || openingLearning;
 
   return (
     <>
@@ -75,7 +81,7 @@ function LoginForm() {
           disabled={busy}
           className="h-11 rounded-[10px] border border-gw-border bg-gw-surface text-[14.5px] font-medium text-gw-text cursor-pointer hover:border-gw-primary-border hover:text-gw-primary-text disabled:opacity-60 disabled:cursor-default"
         >
-          {demoLoading === "guest" ? "Signing in as guest…" : "Continue as guest"}
+          {openingLearning ? "Opening your learning…" : demoLoading === "guest" ? "Signing in as guest…" : "Continue as guest"}
         </button>
         <button
           type="button"
@@ -83,7 +89,7 @@ function LoginForm() {
           disabled={busy}
           className="h-11 rounded-[10px] border border-gw-agent-border bg-gw-agent-bg text-[14.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-gw-agent-hover disabled:opacity-60 disabled:cursor-default"
         >
-          {demoLoading === "admin" ? "Signing in as admin…" : "Continue as admin"}
+          {openingLearning ? "Opening your learning…" : demoLoading === "admin" ? "Signing in as admin…" : "Continue as admin"}
         </button>
       </div>
 
@@ -93,7 +99,7 @@ function LoginForm() {
         <div className="flex-1 h-px bg-gw-border-soft" />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-busy={busy}>
         <div>
           <label className="block text-[13px] font-medium text-gw-text mb-1.5">Email</label>
           <input
@@ -123,9 +129,16 @@ function LoginForm() {
           disabled={busy}
           className="h-11 mt-1 rounded-[10px] bg-gw-primary text-white text-[15px] font-medium border-0 cursor-pointer hover:bg-gw-primary-hover disabled:opacity-60"
         >
-          {submitting ? "Logging in…" : "Log in"}
+          {openingLearning ? "Opening your learning…" : submitting ? "Logging in…" : "Log in"}
         </button>
       </form>
+
+      {openingLearning && (
+        <div role="status" className="mt-4 flex items-center gap-2 text-[13px] text-gw-text-muted">
+          <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gw-primary/25 border-t-gw-primary" />
+          Signed in. Opening your learning…
+        </div>
+      )}
 
       <p className="mt-6 text-[13.5px] text-gw-text-muted">
         New to Growise?{" "}
