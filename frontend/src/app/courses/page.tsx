@@ -88,11 +88,15 @@ export default async function CoursesPage({
       <div className="flex items-end justify-between gap-5">
         <div>
           <h1 className="font-serif text-[36px] font-semibold tracking-tight leading-none text-gw-ink">
-            {selectedCategories.length === 1 ? selectedCategories[0] : "All courses"}
+            {q
+              ? "Search results"
+              : selectedCategories.length === 1
+                ? selectedCategories[0]
+                : "All courses"}
           </h1>
           <div className="mt-2 text-[14px] text-gw-text-muted">
             {products.length} course{products.length === 1 ? "" : "s"}
-            {q && <> matching &ldquo;{q}&rdquo;</>}
+            {q && <> for &ldquo;{q}&rdquo;</>}
           </div>
         </div>
         <details className="group relative mb-0.5 shrink-0">

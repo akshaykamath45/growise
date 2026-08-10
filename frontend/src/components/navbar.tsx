@@ -1,20 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { track } from "@/lib/tracker";
+import { NavSearch } from "@/components/nav-search";
 
 function initials(email: string) {
   return email.slice(0, 2).toUpperCase();
 }
 
+/** "taylor@example.com" -> "Taylor", so the menu has a human label without
+ *  putting the full address in the bar itself. */
+function displayName(email: string) {
+  const local = email.split("@")[0].replace(/[._-]+/g, " ");
+  return local.charAt(0).toUpperCase() + local.slice(1);
+}
+
 export function Navbar() {
   const { user, logout, loading } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
-  const [search, setSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -31,100 +36,120 @@ export function Navbar() {
 
   if (pathname === "/login" || pathname === "/signup") return null;
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const q = search.trim();
-    if (q) track({ event_type: "search", search_query: q });
-    router.push(q ? `/courses?q=${encodeURIComponent(q)}` : "/courses");
-  }
-
-  const navLink = (href: string, label: string, dot?: boolean) => (
-    <Link
-      href={href}
-      className={`h-8 px-2.5 rounded-[7px] text-sm flex items-center gap-1.5 no-underline hover:no-underline ${
-        pathname === href
-          ? "font-semibold text-gw-primary-hover bg-gw-primary-soft"
-          : "font-medium text-gw-text hover:text-gw-ink hover:bg-gw-surface-muted"
-      }`}
-    >
-      {label}
-      {dot && <span className="w-1.5 h-1.5 rounded-full bg-gw-agent-accent" />}
-    </Link>
-  );
+  const navLink = (href: string, label: string, dot?: boolean) => {
+    const active = pathname === href;
+    return (
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={`flex h-8 items-center gap-1.5 rounded-[7px] px-2.5 text-sm no-underline transition-colors hover:no-underline ${
+          active
+            ? "font-semibold text-gw-ink"
+            : "font-medium text-gw-text-muted hover:bg-gw-surface-muted hover:text-gw-ink"
+        }`}
+      >
+        {label}
+        {dot && <span className="h-1.5 w-1.5 rounded-full bg-gw-agent-accent" />}
+      </Link>
+    );
+  };
 
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/90 backdrop-blur border-b border-gw-border-soft">
-      <div className="max-w-[1440px] mx-auto h-full px-6 flex items-center gap-5">
-        <Link href="/" className="flex items-center gap-2 no-underline hover:no-underline">
-          <span className="w-5 h-5 rounded-md bg-gw-primary inline-block" />
+    <header className="sticky top-0 z-20 h-16 border-b border-gw-border-soft bg-white/90 backdrop-blur">
+      <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2 no-underline hover:no-underline">
+          <span className="inline-block h-5 w-5 rounded-md bg-gw-primary" />
           <span className="text-base font-semibold tracking-tight text-gw-ink">Growise</span>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex shrink-0 items-center gap-0.5">
           {navLink("/courses", "Catalog")}
           {user && navLink("/for-you", "For you", true)}
-          {user && navLink("/my-learning", "My learning")}
-          {user?.role === "admin" && navLink("/admin/courses", "Admin")}
         </nav>
 
-        <form onSubmit={handleSearch} className="hidden w-full max-w-[350px] ml-1 md:block">
-          <div className="h-8 border border-gw-border-soft rounded-[8px] bg-gw-surface-muted flex items-center px-3 gap-2 focus-within:border-gw-primary-border focus-within:bg-white">
-            <span className="relative w-[11px] h-[11px] rounded-full border-[1.5px] border-gw-text-placeholder after:absolute after:w-[5px] after:h-[1.5px] after:bg-gw-text-placeholder after:-right-1 after:-bottom-0.5 after:rotate-45 after:rounded-full" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search courses"
-              className="flex-1 bg-transparent outline-none text-[13.5px] placeholder:text-gw-text-placeholder"
-            />
-          </div>
-        </form>
+        <div className="hidden flex-1 justify-center px-2 md:flex">
+          <Suspense fallback={<div className="h-9 w-full max-w-[460px]" />}>
+            <NavSearch />
+          </Suspense>
+        </div>
 
-        <div className="ml-auto flex items-center gap-3.5">
+        <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
           {loading ? null : user ? (
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2.5 bg-transparent border-0 cursor-pointer"
-              >
-                <span className="text-xs text-gw-text-faint hidden sm:inline">{user.email}</span>
-                <span className="w-[30px] h-[30px] rounded-full bg-gw-primary-soft text-gw-primary-hover flex items-center justify-center text-[12.5px] font-semibold">
-                  {initials(user.email)}
-                </span>
-              </button>
+            <>
+              {navLink("/my-learning", "My learning")}
 
-              {menuOpen && (
-                <div className="absolute right-0 top-[42px] w-52 bg-white border border-gw-border-soft rounded-xl shadow-[0_10px_24px_-8px_rgba(28,30,42,0.2)] py-1.5 z-30">
-                  <div className="px-3.5 py-2.5 border-b border-gw-border-hairline">
-                    <div className="text-[13px] font-medium text-gw-ink truncate">{user.email}</div>
-                    <div className="text-[11px] text-gw-text-faint capitalize mt-0.5">{user.role} account</div>
+              <div className="relative ml-1" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label="Account menu"
+                  className="flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0"
+                >
+                  <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gw-primary-soft text-[12.5px] font-semibold text-gw-primary-hover">
+                    {initials(user.email)}
+                  </span>
+                  <span className="text-[10px] text-gw-text-placeholder" aria-hidden>
+                    ▾
+                  </span>
+                </button>
+
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-[42px] z-30 w-56 overflow-hidden rounded-xl border border-gw-border-soft bg-white py-1.5 shadow-[0_16px_32px_-12px_rgba(28,30,42,0.22)]"
+                  >
+                    <div className="border-b border-gw-border-hairline px-3.5 py-2.5">
+                      <div className="text-[13px] font-semibold text-gw-ink">
+                        {displayName(user.email)}
+                      </div>
+                      <div className="mt-0.5 truncate text-[11.5px] text-gw-text-faint">
+                        {user.email}
+                      </div>
+                    </div>
+                    <Link
+                      href="/my-learning"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline"
+                    >
+                      My learning
+                    </Link>
+                    {user.role === "admin" && (
+                      <Link
+                        href="/admin/courses"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline"
+                      >
+                        Course admin
+                      </Link>
+                    )}
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full cursor-pointer border-0 bg-transparent px-3.5 py-2.5 text-left text-sm text-gw-error hover:bg-gw-surface-muted"
+                    >
+                      Log out
+                    </button>
                   </div>
-                  <Link
-                    href="/my-learning"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:no-underline hover:bg-gw-surface-muted"
-                  >
-                    My learning
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      logout();
-                    }}
-                    className="w-full text-left px-3.5 py-2.5 text-sm text-gw-error bg-transparent border-0 cursor-pointer hover:bg-gw-surface-muted"
-                  >
-                    Log out
-                  </button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-medium text-gw-text no-underline hover:no-underline">
+              <Link
+                href="/login"
+                className="px-2 text-sm font-medium text-gw-text no-underline hover:no-underline hover:text-gw-ink"
+              >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="h-10 px-[18px] rounded-[8px] bg-gw-primary-hover text-white text-sm font-medium flex items-center no-underline hover:no-underline hover:bg-gw-primary"
+                className="flex h-9 items-center rounded-[8px] bg-gw-primary-hover px-[18px] text-sm font-medium text-white no-underline hover:bg-gw-primary hover:no-underline"
               >
                 Sign up
               </Link>

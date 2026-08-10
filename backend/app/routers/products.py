@@ -32,8 +32,19 @@ def list_products(
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
     if q:
+        # Match the same fields the navbar autocomplete ranks over, so "view all
+        # results" can't return fewer courses than the dropdown just suggested.
         like = f"%{q}%"
-        query = query.filter(or_(Product.title.ilike(like), Product.description.ilike(like)))
+        query = query.filter(
+            or_(
+                Product.title.ilike(like),
+                Product.description.ilike(like),
+                Product.category.ilike(like),
+                Product.tags.ilike(like),
+                Product.instructor.ilike(like),
+                Product.level.ilike(like),
+            )
+        )
     return query.order_by(Product.created_at.desc()).offset(offset).limit(limit).all()
 
 
