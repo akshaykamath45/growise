@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { NavSearch } from "@/components/nav-search";
 import { useTheme } from "@/components/theme-provider";
+import { BrandMark } from "@/components/brand-mark";
 
 function initials(email: string) {
   return email.slice(0, 2).toUpperCase();
@@ -77,7 +78,7 @@ export function Navbar() {
     <header className="sticky top-0 z-20 h-16 border-b border-gw-border-soft bg-gw-surface/90 backdrop-blur">
       <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2 no-underline hover:no-underline">
-          <span className="inline-block h-5 w-5 rounded-md bg-gw-primary" />
+          <BrandMark />
           <span className="text-base font-semibold tracking-tight text-gw-ink">Growise</span>
         </Link>
 

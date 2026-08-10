@@ -1,9 +1,35 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { API_URL, ApiError, productsApi } from "@/lib/api";
 import { TrackProductView } from "@/components/track-product-view";
 import { EnrollPanel } from "@/components/enroll-panel";
 import { CourseCurriculum } from "@/components/course-curriculum";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const productId = Number(id);
+  if (Number.isNaN(productId)) return { title: "Course not found", robots: { index: false, follow: false } };
+
+  try {
+    const product = await productsApi.get(productId);
+    const image = product.image_url ? `${API_URL}${product.image_url}` : "/opengraph-image";
+    return {
+      title: product.title,
+      description: product.description,
+      alternates: { canonical: `/courses/${product.id}` },
+      openGraph: {
+        type: "website",
+        title: product.title,
+        description: product.description,
+        images: [{ url: image, alt: product.title }],
+      },
+      twitter: { card: "summary_large_image", title: product.title, description: product.description, images: [image] },
+    };
+  } catch {
+    return { title: "Course not found", robots: { index: false, follow: false } };
+  }
+}
 
 export default async function CourseDetailPage({
   params,

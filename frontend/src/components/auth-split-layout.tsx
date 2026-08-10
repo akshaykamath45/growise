@@ -1,3 +1,5 @@
+import { BrandMark } from "@/components/brand-mark";
+
 export function AuthSplitLayout({
   children,
   eyebrow = "Your learning signal",
@@ -24,7 +26,13 @@ export function AuthSplitLayout({
         </div>
 
         <div className="px-8 sm:px-12 py-12 flex flex-col">
-          <div className="my-auto w-full max-w-[400px] py-8">{children}</div>
+          <div className="my-auto w-full max-w-[400px] py-8">
+            <div className="mb-8 inline-flex items-center gap-2.5" aria-label="Growise">
+              <BrandMark size={25} />
+              <span className="text-[18px] font-semibold tracking-tight text-gw-ink">Growise</span>
+            </div>
+            {children}
+          </div>
         </div>
       </div>
     </div>

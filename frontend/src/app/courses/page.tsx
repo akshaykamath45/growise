@@ -1,6 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { productsApi } from "@/lib/api";
 import { CourseCard } from "@/components/course-card";
+
+export const metadata: Metadata = {
+  title: "Course catalog",
+  description: "Browse career-building courses across AI, web development, design, cloud, cybersecurity, and data science.",
+  alternates: { canonical: "/courses" },
+};
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 const PRICE_RANGES = [
@@ -144,7 +151,7 @@ export default async function CoursesPage({
       </div>
 
       <div className="mt-5 grid grid-cols-1 items-start gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 shadow-[0_8px_24px_-20px_rgba(28,30,42,0.35)]">
+        <aside className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 shadow-[0_8px_24px_-20px_rgba(28,30,42,0.35)] lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:overscroll-contain">
           <div className="mb-5 flex items-center justify-between">
             <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Filters</div>
             {activeFilterCount > 0 && <span className="rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[10px] text-gw-primary-text">{activeFilterCount}</span>}

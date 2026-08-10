@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { productsApi } from "@/lib/api";
 import { HeroSection } from "@/components/home/hero-section";
 import { HomeExperience } from "@/components/home/home-experience";
@@ -7,6 +8,12 @@ import { Experts } from "@/components/home/experts";
 import { Reveal } from "@/components/reveal";
 import { buildTopics } from "@/components/home/topic";
 import { buildInstructors } from "@/components/home/instructors";
+
+export const metadata: Metadata = {
+  title: "Learn what you’ll actually use next",
+  description: "Explore adaptive course recommendations across web development, AI, design, cloud, data, and cybersecurity.",
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const [categories, products] = await Promise.all([

@@ -5,6 +5,10 @@ import { AuthProvider } from "@/lib/auth-context";
 import { Navbar } from "@/components/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 
+const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
+const siteDescription =
+  "Growise is an adaptive learning platform that connects what you explore to the courses that move you forward.";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -22,9 +26,34 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "Growise — Learn what you'll actually use",
-  description:
-    "A course marketplace with an AI agent that watches what you browse and tells you why it's recommending your next course.",
+  metadataBase: siteUrl,
+  title: {
+    default: "Growise | Learn what you’ll actually use next",
+    template: "%s | Growise",
+  },
+  description: siteDescription,
+  applicationName: "Growise",
+  keywords: ["online courses", "personalized learning", "course recommendations", "professional development"],
+  category: "education",
+  creator: "Growise",
+  formatDetection: { email: false, address: false, telephone: false },
+  icons: { icon: "/logos/growise-orbit.svg" },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: "Growise",
+    title: "Growise | Learn what you’ll actually use next",
+    description: siteDescription,
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Growise adaptive learning" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Growise | Learn what you’ll actually use next",
+    description: siteDescription,
+    images: ["/opengraph-image"],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -35,6 +64,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Growise",
+              url: siteUrl.href,
+              description: siteDescription,
+            }),
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(() => {
