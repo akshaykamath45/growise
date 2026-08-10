@@ -91,7 +91,7 @@ export default async function CoursesPage({
   });
 
   return (
-    <div className="max-w-[1440px] mx-auto px-6 py-7">
+    <div className="mx-auto max-w-[1440px] px-6 py-7 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:overflow-hidden">
       <div className="flex items-end justify-between gap-5">
         <div>
           <h1 className="font-serif text-[36px] font-semibold tracking-tight leading-none text-gw-ink">
@@ -150,8 +150,8 @@ export default async function CoursesPage({
         ))}
       </div>
 
-      <div className="mt-5 grid grid-cols-1 items-start gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 shadow-[0_8px_24px_-20px_rgba(28,30,42,0.35)] lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:overscroll-contain">
+      <div className="mt-5 grid grid-cols-1 items-start gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[248px_minmax(0,1fr)] lg:items-stretch">
+        <aside className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 shadow-[0_8px_24px_-20px_rgba(28,30,42,0.35)] lg:self-start lg:max-h-full lg:overflow-y-auto lg:overscroll-contain">
           <div className="mb-5 flex items-center justify-between">
             <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Filters</div>
             {activeFilterCount > 0 && <span className="rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[10px] text-gw-primary-text">{activeFilterCount}</span>}
@@ -234,7 +234,7 @@ export default async function CoursesPage({
           )}
         </aside>
 
-        <div>
+        <div className="lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
           {sortedProducts.length === 0 ? (
             <div className="border border-dashed border-gw-border rounded-2xl bg-gw-surface p-14 text-center">
               <p className="font-serif text-lg text-gw-text-muted max-w-[36ch] mx-auto">
