@@ -12,8 +12,8 @@ export function AuthSplitLayout({
   description?: string;
 }) {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gw-bg px-6 py-10">
-      <div className="grid min-h-[620px] w-full max-w-[980px] grid-cols-1 overflow-hidden rounded-2xl border border-gw-border bg-gw-surface shadow-[0_20px_50px_-20px_rgba(28,30,42,0.24)] md:grid-cols-2">
+    <div className="flex min-h-[calc(100vh-4rem)] items-start justify-center bg-gw-bg px-4 py-6 sm:px-6 sm:py-10 md:items-center">
+      <div className="grid w-full max-w-[980px] grid-cols-1 overflow-hidden rounded-xl border border-gw-border bg-gw-surface shadow-[0_20px_50px_-20px_rgba(28,30,42,0.24)] md:min-h-[620px] md:grid-cols-2 md:rounded-2xl">
         <div className="hidden md:flex bg-gw-agent-bg border-r border-gw-agent-border px-12 py-12 flex-col justify-center">
           <div className="relative w-9 h-9 flex items-center justify-center">
             <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />
@@ -25,9 +25,9 @@ export function AuthSplitLayout({
           {description && <p className="mt-4 max-w-[35ch] text-[14px] leading-relaxed text-gw-agent-2">{description}</p>}
         </div>
 
-        <div className="px-8 sm:px-12 py-12 flex flex-col">
-          <div className="my-auto w-full max-w-[400px] py-8">
-            <div className="mb-8 inline-flex items-center gap-2.5" aria-label="Growise">
+        <div className="flex flex-col px-5 py-7 min-[390px]:px-6 sm:px-12 sm:py-12">
+          <div className="my-auto w-full max-w-[400px] py-2 sm:py-8">
+            <div className="mb-7 inline-flex items-center gap-2.5 sm:mb-8" aria-label="Growise">
               <BrandMark size={25} />
               <span className="text-[18px] font-semibold tracking-tight text-gw-ink">Growise</span>
             </div>

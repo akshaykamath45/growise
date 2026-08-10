@@ -2,16 +2,16 @@ import { Reveal } from "@/components/reveal";
 
 export function HowItWorks() {
   return (
-    <div className="max-w-[1240px] mx-auto px-6 py-16">
+    <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 sm:py-16">
       <Reveal>
-        <h2 className="font-serif text-[38px] leading-[1.15] tracking-tight">
+        <h2 className="font-serif text-[32px] leading-[1.12] tracking-tight sm:text-[38px]">
           Your learning changes.
           <br />
           Growise notices.
         </h2>
       </Reveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.5fr] gap-8 md:gap-6 mt-12 items-stretch">
+      <div className="mt-9 grid grid-cols-1 items-stretch gap-8 md:mt-12 md:grid-cols-[1fr_1fr_1.5fr] md:gap-6">
         <Reveal delay={0}>
           <div className="border-t-2 border-gw-border pt-5 h-full">
             <div className="font-mono text-[12px] text-gw-text-faint">01 — Explore</div>

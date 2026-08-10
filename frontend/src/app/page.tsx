@@ -66,12 +66,12 @@ export default async function HomePage() {
           </text>
         </svg>
 
-        <div className="relative max-w-[1240px] mx-auto px-6 py-20 text-center">
+        <div className="relative mx-auto max-w-[1240px] px-4 py-14 text-center sm:px-6 sm:py-20">
           <Reveal>
             <div className="font-mono text-[10.5px] tracking-[0.18em] uppercase text-gw-primary-soft">
               Ready for your next step?
             </div>
-            <p className="font-serif text-[38px] sm:text-[44px] leading-[1.15] tracking-tight text-white mt-4 max-w-[22ch] mx-auto">
+            <p className="mx-auto mt-4 max-w-[22ch] font-serif text-[32px] leading-[1.12] tracking-tight text-white sm:text-[44px] sm:leading-[1.15]">
               Your next course might already be waiting.
             </p>
             <p className="text-[15px] text-gw-primary-soft/90 mt-4 max-w-[40ch] mx-auto">

@@ -113,8 +113,8 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
 
       {/* the single recommendation moment, with the orbit illustration filling
           the space beside it on wide screens */}
-      <div className="mt-12 grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,620px)_minmax(0,1fr)]">
-      <div className="bg-gw-agent-bg border border-gw-agent-border rounded-2xl px-7 py-7 shadow-[0_24px_50px_-30px_rgba(185,110,24,0.5)]">
+      <div className="mt-9 grid grid-cols-1 items-center gap-8 sm:mt-12 lg:grid-cols-[minmax(0,620px)_minmax(0,1fr)]">
+      <div className="rounded-2xl border border-gw-agent-border bg-gw-agent-bg px-5 py-6 shadow-[0_24px_50px_-30px_rgba(185,110,24,0.5)] sm:px-7 sm:py-7">
         <div className="flex items-center gap-2.5">
           <span className="relative w-[18px] h-[18px] flex items-center justify-center">
             <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />
@@ -125,7 +125,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
           </span>
         </div>
 
-        <div className="font-serif text-[27px] leading-tight text-gw-ink mt-3.5">
+        <div className="mt-3.5 font-serif text-[24px] leading-tight text-gw-ink sm:text-[27px]">
           {topic.recommendation.title}
         </div>
 
@@ -133,7 +133,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
           {topic.reason}
         </p>
 
-        <div className="flex items-center gap-4 mt-5 flex-wrap">
+        <div className="mt-5 flex flex-col gap-3 min-[390px]:flex-row min-[390px]:items-center min-[390px]:gap-4">
           <Link
             href={`/courses/${topic.recommendation.id}`}
             className="h-10 px-4 rounded-[9px] bg-gw-primary text-white text-[13.5px] font-medium leading-10 no-underline hover:no-underline hover:bg-gw-primary-hover"

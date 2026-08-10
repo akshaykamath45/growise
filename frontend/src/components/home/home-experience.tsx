@@ -33,9 +33,9 @@ export function HomeExperience({ topics }: { topics: TopicData[] }) {
     <>
       {/* ——— 4. What does that actually look like? ——— */}
       <section id="demo" className="bg-gw-paper border-b border-gw-border-soft">
-        <div className="max-w-[1240px] mx-auto px-6 py-16">
+        <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 sm:py-16">
           <Reveal>
-            <div className="flex flex-wrap items-end gap-x-8 gap-y-4 justify-between mb-10">
+            <div className="mb-8 flex flex-col items-start gap-4 sm:mb-10 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-x-8">
               <div>
                 <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint mb-1.5">
                   A real recommendation
@@ -54,7 +54,7 @@ export function HomeExperience({ topics }: { topics: TopicData[] }) {
 
       {/* ——— 5. What else can I explore? ——— */}
       <section className="bg-gw-bg">
-        <div className="max-w-[1240px] mx-auto px-6 py-16">
+        <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 sm:py-16">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -81,7 +81,7 @@ export function HomeExperience({ topics }: { topics: TopicData[] }) {
             </div>
 
             {elsewhere.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-9">
+              <div className="mt-8 grid grid-cols-1 gap-5 sm:mt-9 sm:grid-cols-3 sm:gap-6">
                 {elsewhere.map((product) => (
                   <CourseCard key={product.id} product={product} />
                 ))}

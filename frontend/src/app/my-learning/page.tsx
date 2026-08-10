@@ -30,15 +30,15 @@ export default function MyLearningPage() {
   }, [load]);
 
   if (authLoading || !user || enrollments === null) {
-    return <div className="max-w-[1240px] mx-auto px-6 py-16 text-gw-text-muted">Loading…</div>;
+    return <div className="mx-auto max-w-[1240px] px-4 py-12 text-gw-text-muted sm:px-6 sm:py-16">Loading…</div>;
   }
 
   return (
-    <div className="max-w-[1240px] mx-auto px-6 py-10">
+    <div className="mx-auto max-w-[1240px] px-4 py-7 sm:px-6 sm:py-10">
       <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">
         Your courses
       </div>
-      <h1 className="font-serif text-[36px] tracking-tight leading-tight mt-1.5">My learning</h1>
+      <h1 className="mt-1.5 font-serif text-[32px] leading-tight tracking-tight sm:text-[36px]">My learning</h1>
       <p className="mt-2 text-[14px] text-gw-text-muted">
         {enrollments.length === 0
           ? "Courses you enroll in will show up here."
@@ -46,7 +46,7 @@ export default function MyLearningPage() {
       </p>
 
       {enrollments.length === 0 ? (
-        <div className="mt-8 border border-dashed border-gw-border rounded-2xl bg-gw-surface p-14 text-center">
+        <div className="mt-7 rounded-2xl border border-dashed border-gw-border bg-gw-surface p-7 text-center sm:mt-8 sm:p-14">
           <p className="font-serif text-lg text-gw-text-muted max-w-[42ch] mx-auto">
             You haven&apos;t enrolled in anything yet. Find something worth your next few hours.
           </p>
@@ -58,7 +58,7 @@ export default function MyLearningPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        <div className="mt-7 grid grid-cols-1 gap-5 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {enrollments.map((enrollment) => (
             <div key={enrollment.id}>
               <CourseCard product={enrollment.product} />

@@ -10,7 +10,7 @@ export function Experts({ instructors }: { instructors: InstructorSummary[] }) {
   if (instructors.length === 0) return null;
 
   return (
-    <div className="max-w-[1240px] mx-auto px-6 py-16">
+    <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 sm:py-16">
       <Reveal>
         <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint mb-1.5">
           Who&apos;s teaching
@@ -18,7 +18,7 @@ export function Experts({ instructors }: { instructors: InstructorSummary[] }) {
         <h2 className="font-serif text-[30px] tracking-tight">Learn from people who build it.</h2>
       </Reveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10 mt-11">
+      <div className="mt-9 grid grid-cols-1 gap-x-8 gap-y-8 sm:mt-11 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-4">
         {instructors.map((instructor, i) => {
           const tone = AVATAR_TONES[i % AVATAR_TONES.length];
           return (

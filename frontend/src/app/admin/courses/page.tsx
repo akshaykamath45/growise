@@ -120,11 +120,11 @@ export default function AdminCoursesPage() {
   }
 
   if (loading || user?.role !== "admin") {
-    return <div className="max-w-[1440px] mx-auto px-6 py-16 text-gw-text-muted">Checking access…</div>;
+    return <div className="mx-auto max-w-[1440px] px-4 py-12 text-gw-text-muted sm:px-6 sm:py-16">Checking access…</div>;
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-6 py-9">
+    <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6 sm:py-9">
       <div className="flex items-end gap-4 mb-6">
         <div>
           <div className="font-mono text-[10px] tracking-wider uppercase text-gw-text-faint">Admin</div>
@@ -138,8 +138,8 @@ export default function AdminCoursesPage() {
         </button>
       </div>
 
-      <div className="bg-gw-surface border border-gw-border-soft rounded-2xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-2xl border border-gw-border-soft bg-gw-surface">
+        <table className="min-w-[760px] w-full text-sm">
           <thead>
             <tr className="border-b border-gw-border-hairline text-left">
               <th className="px-5 py-3 font-mono text-[10px] tracking-wider uppercase text-gw-text-faint font-normal">
@@ -202,8 +202,8 @@ export default function AdminCoursesPage() {
       </div>
 
       {formOpen && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-30 p-6">
-          <div className="bg-gw-surface rounded-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto p-7">
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30 p-4 sm:p-6">
+          <div className="max-h-[88vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-gw-surface p-5 sm:max-h-[85vh] sm:p-7">
             <h2 className="text-xl font-semibold">{editingId ? "Edit course" : "New course"}</h2>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 mt-5">
               <Field label="Title">
@@ -223,7 +223,7 @@ export default function AdminCoursesPage() {
                   className={textareaClass}
                 />
               </Field>
-              <div className="grid grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 <Field label="Category">
                   <input
                     required
@@ -244,7 +244,7 @@ export default function AdminCoursesPage() {
                   </select>
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 <Field label="Price ($)">
                   <input
                     type="number"
@@ -273,7 +273,7 @@ export default function AdminCoursesPage() {
                   className={inputClass}
                 />
               </Field>
-              <div className="grid grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 <Field label="Duration (e.g. 6H 30M)">
                   <input
                     value={form.duration_label}
@@ -290,7 +290,7 @@ export default function AdminCoursesPage() {
                   />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 <Field label="Rating">
                   <input
                     type="number"

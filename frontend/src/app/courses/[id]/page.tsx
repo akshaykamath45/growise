@@ -54,7 +54,7 @@ export default async function CourseDetailPage({
     .filter(Boolean);
 
   return (
-    <div className="max-w-[1180px] mx-auto px-6 py-8 pb-16">
+    <div className="mx-auto max-w-[1180px] px-4 py-6 pb-24 sm:px-6 sm:py-8 sm:pb-16">
       <TrackProductView productId={product.id} category={product.category} />
 
       <div className="font-mono text-[10.5px] tracking-wide text-gw-text-faint flex gap-2 items-center">
@@ -70,7 +70,7 @@ export default async function CourseDetailPage({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-10 mt-6 items-start lg:grid-cols-[minmax(0,1fr)_372px]">
+      <div className="mt-5 grid grid-cols-1 items-start gap-8 sm:mt-6 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_372px]">
         <div>
           <div className="flex gap-2.5 items-center flex-wrap">
             <span className="px-2.5 py-1 rounded-full bg-gw-primary-soft text-gw-primary-text font-mono text-[10px] tracking-wider uppercase">
@@ -80,8 +80,8 @@ export default async function CourseDetailPage({
               {product.level}
             </span>
           </div>
-          <h1 className="mt-4 font-serif text-4xl font-semibold tracking-tight leading-tight text-gw-ink">{product.title}</h1>
-          <p className="mt-3.5 text-[17px] leading-relaxed text-gw-text max-w-[64ch]">{product.description}</p>
+          <h1 className="mt-4 font-serif text-[32px] font-semibold leading-tight tracking-tight text-gw-ink sm:text-4xl">{product.title}</h1>
+          <p className="mt-3.5 max-w-[64ch] text-[16px] leading-relaxed text-gw-text sm:text-[17px]">{product.description}</p>
 
           {product.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -123,9 +123,9 @@ export default async function CourseDetailPage({
 
           {product.course_content && (
             <>
-              <section aria-labelledby="course-overview" className="mt-9 rounded-2xl border border-gw-border-soft bg-gw-surface p-6">
+              <section aria-labelledby="course-overview" className="mt-8 rounded-2xl border border-gw-border-soft bg-gw-surface p-5 sm:mt-9 sm:p-6">
                 <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Inside the course</div>
-                <h2 id="course-overview" className="mt-1.5 font-serif text-[28px] tracking-tight text-gw-ink">
+                <h2 id="course-overview" className="mt-1.5 font-serif text-[25px] tracking-tight text-gw-ink sm:text-[28px]">
                   {product.course_content.headline || product.title}
                 </h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-gw-text">{product.course_content.overview}</p>

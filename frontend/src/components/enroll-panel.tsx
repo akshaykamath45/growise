@@ -68,6 +68,7 @@ export function EnrollPanel({ product }: { product: Product }) {
   const busy = authLoading || checking || submitting;
 
   return (
+    <>
     <aside aria-label="Course enrollment" className="flex flex-col gap-3 lg:sticky lg:top-20">
       <div className="overflow-hidden rounded-2xl border border-gw-border-soft bg-gw-surface shadow-[0_18px_34px_-22px_rgba(28,30,42,0.34)]">
         <div className="relative hidden aspect-[16/10] overflow-hidden border-b border-gw-border-soft bg-gw-deep lg:block">
@@ -172,5 +173,34 @@ export function EnrollPanel({ product }: { product: Product }) {
         Learn at your own pace, with full access from the moment you enroll.
       </p>
     </aside>
+
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gw-border-soft bg-gw-surface/95 px-4 py-3 shadow-[0_-12px_28px_-20px_rgba(28,30,42,0.45)] backdrop-blur lg:hidden">
+      <div className="mx-auto flex max-w-[560px] items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">One-time enrollment</div>
+          <div className="mt-0.5 flex items-baseline gap-1.5">
+            <span className="text-[21px] font-semibold tracking-tight text-gw-ink">${product.price}</span>
+            {product.old_price && <span className="text-[12px] text-gw-text-placeholder line-through">${product.old_price}</span>}
+          </div>
+        </div>
+        {enrolled ? (
+          <Link
+            href="/my-learning"
+            className="flex h-11 shrink-0 items-center justify-center rounded-[9px] bg-gw-primary px-4 text-[14px] font-medium text-white no-underline hover:bg-gw-primary-hover hover:no-underline"
+          >
+            My learning
+          </Link>
+        ) : (
+          <button
+            onClick={handleEnroll}
+            disabled={busy}
+            className="h-11 shrink-0 rounded-[9px] border-0 bg-gw-primary px-5 text-[14px] font-medium text-white cursor-pointer hover:bg-gw-primary-hover disabled:cursor-default disabled:opacity-70"
+          >
+            {submitting ? "Enrolling…" : "Enroll now"}
+          </button>
+        )}
+      </div>
+    </div>
+    </>
   );
 }

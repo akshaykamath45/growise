@@ -55,24 +55,24 @@ export default function ForYouPage() {
   }
 
   if (authLoading || !user || rec === undefined) {
-    return <div className="max-w-[1180px] mx-auto px-6 py-16 text-gw-text-muted">Loading…</div>;
+    return <div className="mx-auto max-w-[1180px] px-4 py-12 text-gw-text-muted sm:px-6 sm:py-16">Loading…</div>;
   }
 
   return (
-    <div className="max-w-[1180px] mx-auto px-6 py-9">
+    <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-9">
       <div className="flex items-end gap-5">
         <div>
           <div className="font-mono text-[11px] tracking-wider uppercase text-gw-text-faint">
             {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
           </div>
-          <h1 className="font-serif text-[42px] leading-tight tracking-tight mt-2">
+          <h1 className="mt-2 font-serif text-[34px] leading-tight tracking-tight sm:text-[42px]">
             For you, {user.email.split("@")[0]}
           </h1>
         </div>
       </div>
 
       {rec === null ? (
-        <div className="mt-8 border border-dashed border-gw-border rounded-2xl bg-gw-surface p-14 text-center">
+        <div className="mt-7 rounded-2xl border border-dashed border-gw-border bg-gw-surface p-7 text-center sm:mt-8 sm:p-14">
           <p className="font-serif text-lg text-gw-text-muted max-w-[40ch] mx-auto">
             Still gathering signal. Browse a few courses or search for something you&apos;re curious about, and
             the agent will put together a recommendation.
@@ -85,9 +85,9 @@ export default function ForYouPage() {
           </a>
         </div>
       ) : (
-        <div className="bg-gw-surface border border-gw-border-soft rounded-2xl overflow-hidden mt-8 shadow-[0_1px_2px_rgba(28,30,42,0.05)]">
-          <div className="bg-gw-agent-bg border-b border-gw-agent-border px-8 py-7">
-            <div className="flex items-center gap-2.5">
+        <div className="mt-7 overflow-hidden rounded-2xl border border-gw-border-soft bg-gw-surface shadow-[0_1px_2px_rgba(28,30,42,0.05)] sm:mt-8">
+          <div className="border-b border-gw-agent-border bg-gw-agent-bg px-5 py-5 sm:px-8 sm:py-7">
+            <div className="flex flex-wrap items-center gap-2.5">
               <span className="relative w-[22px] h-[22px] flex items-center justify-center">
                 <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />
                 <span className="w-[7px] h-[7px] rounded-full bg-gw-agent [animation:gwPulse_2.2s_ease-in-out_infinite]" />
@@ -101,12 +101,12 @@ export default function ForYouPage() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="ml-auto h-[30px] px-3 rounded-lg border border-gw-agent-border bg-transparent text-[12.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-gw-agent-hover disabled:opacity-60"
+                className="ml-auto h-[30px] rounded-lg border border-gw-agent-border bg-transparent px-3 text-[12.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-gw-agent-hover disabled:opacity-60"
               >
                 {refreshing ? "Refreshing…" : "Refresh"}
               </button>
             </div>
-            <p className="font-serif text-[22px] leading-relaxed text-gw-ink-2 mt-4 max-w-[62ch]">
+            <p className="mt-4 max-w-[62ch] font-serif text-[20px] leading-relaxed text-gw-ink-2 sm:text-[22px]">
               {rec.narrative}
             </p>
             {rec.evidence.length > 0 && (
@@ -124,11 +124,11 @@ export default function ForYouPage() {
             {error && <div className="text-sm text-gw-error mt-3">{error}</div>}
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="font-mono text-[10px] tracking-wider uppercase text-gw-text-faint mb-3">
               {rec.items.length} course{rec.items.length === 1 ? "" : "s"}, in order
             </div>
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {rec.items.map((item) => (
                 <CourseCard key={item.product.id} product={item.product} reason={item.reason} />
               ))}

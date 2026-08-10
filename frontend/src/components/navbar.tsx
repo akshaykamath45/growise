@@ -75,25 +75,26 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-20 h-16 border-b border-gw-border-soft bg-gw-surface/90 backdrop-blur">
-      <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2 no-underline hover:no-underline">
-          <BrandMark />
-          <span className="text-base font-semibold tracking-tight text-gw-ink">Growise</span>
-        </Link>
+    <header className="sticky top-0 z-20 border-b border-gw-border-soft bg-gw-surface/90 backdrop-blur md:h-16">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
+        <div className="flex h-14 items-center gap-2 md:h-16 md:gap-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2 no-underline hover:no-underline">
+            <BrandMark />
+            <span className="text-[15px] font-semibold tracking-tight text-gw-ink sm:text-base">Growise</span>
+          </Link>
 
-        <nav className="flex shrink-0 items-center gap-0.5">
-          {navLink("/courses", "Catalog")}
-          {user && navLink("/for-you", "For you", true)}
-        </nav>
+          <nav className="hidden shrink-0 items-center gap-0.5 sm:flex">
+            {navLink("/courses", "Catalog")}
+            {user && navLink("/for-you", "For you", true)}
+          </nav>
 
-        <div className="hidden flex-1 justify-center px-2 md:flex">
-          <Suspense fallback={<div className="h-9 w-full max-w-[460px]" />}>
-            <NavSearch />
-          </Suspense>
-        </div>
+          <div className="hidden flex-1 justify-center px-2 md:flex">
+            <Suspense fallback={<div className="h-9 w-full max-w-[460px]" />}>
+              <NavSearch />
+            </Suspense>
+          </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0 md:gap-2">
           <button
             type="button"
             onClick={toggleTheme}
@@ -115,7 +116,7 @@ export function Navbar() {
 
           {loading ? null : user ? (
             <>
-              {navLink("/my-learning", "My learning")}
+              <span className="hidden sm:contents">{navLink("/my-learning", "My learning")}</span>
 
               <div className="relative ml-1" ref={menuRef}>
                 <button
@@ -189,14 +190,14 @@ export function Navbar() {
               pathname === "/login" ? (
                 <Link
                   href="/signup"
-                  className="flex h-9 items-center rounded-[8px] bg-gw-primary px-[18px] text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline"
+                  className="flex h-9 items-center rounded-[8px] bg-gw-primary px-3.5 text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline md:px-[18px]"
                 >
                   Sign up
                 </Link>
               ) : (
                 <Link
                   href="/login"
-                  className="flex h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3.5 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline"
+                  className="flex h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline md:px-3.5"
                 >
                   Log in
                 </Link>
@@ -205,19 +206,26 @@ export function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="flex h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3.5 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline"
+                  className="hidden h-9 items-center rounded-[8px] border border-gw-border-soft bg-gw-surface px-3 text-sm font-medium text-gw-ink no-underline transition-colors hover:border-gw-primary-border hover:bg-gw-surface-muted hover:text-gw-primary-text hover:no-underline min-[390px]:flex md:px-3.5"
                 >
                   Log in
                 </Link>
                 <Link
                   href="/signup"
-                  className="flex h-9 items-center rounded-[8px] bg-gw-primary px-[18px] text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline"
+                  className="flex h-9 items-center rounded-[8px] bg-gw-primary px-3.5 text-sm font-semibold text-white no-underline shadow-[0_6px_14px_-8px_rgb(90_71_220_/_70%)] transition-colors hover:bg-gw-primary-hover hover:no-underline md:px-[18px]"
                 >
                   Sign up
                 </Link>
               </>
             )
           )}
+          </div>
+        </div>
+
+        <div className="pb-3 md:hidden">
+          <Suspense fallback={<div className="h-9 w-full" />}>
+            <NavSearch />
+          </Suspense>
         </div>
       </div>
     </header>

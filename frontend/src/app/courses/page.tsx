@@ -32,6 +32,113 @@ function toggleValue(values: string[], value: string) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 }
 
+function MobileFilters({
+  categories,
+  selectedCategories,
+  selectedLevels,
+  minPrice,
+  maxPrice,
+  activeFilterCount,
+  withParams,
+}: {
+  categories: string[];
+  selectedCategories: string[];
+  selectedLevels: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  activeFilterCount: number;
+  withParams: (changes: Record<string, string | string[] | undefined>) => string;
+}) {
+  const choiceClass = "flex min-h-9 items-center gap-2 rounded-lg px-2.5 text-[12.5px] no-underline hover:no-underline";
+
+  return (
+    <details className="group rounded-xl border border-gw-border-soft bg-gw-surface lg:hidden">
+      <summary className="flex h-12 cursor-pointer list-none items-center gap-2.5 px-4 marker:content-none">
+        <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Filters</span>
+        {activeFilterCount > 0 && (
+          <span className="rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[10px] text-gw-primary-text">
+            {activeFilterCount} active
+          </span>
+        )}
+        <span className="ml-auto text-gw-text-faint transition-transform group-open:rotate-45" aria-hidden>+</span>
+      </summary>
+      <div className="border-t border-gw-border-hairline px-4 py-4">
+        <FilterGroup label="Category">
+          {categories.map((category) => {
+            const selected = selectedCategories.includes(category);
+            return (
+              <Link
+                key={category}
+                href={withParams({ category: toggleValue(selectedCategories, category) })}
+                role="checkbox"
+                aria-checked={selected}
+                className={`${choiceClass} ${selected ? "bg-gw-primary-soft font-medium text-gw-primary-text" : "bg-gw-surface-muted text-gw-text"}`}
+              >
+                <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border text-[10px] ${selected ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border bg-gw-surface text-transparent"}`}>✓</span>
+                <span className="truncate">{category}</span>
+              </Link>
+            );
+          })}
+        </FilterGroup>
+
+        <FilterGroup label="Level">
+          {LEVELS.map((level) => {
+            const selected = selectedLevels.includes(level);
+            return (
+              <Link
+                key={level}
+                href={withParams({ level: toggleValue(selectedLevels, level) })}
+                role="checkbox"
+                aria-checked={selected}
+                className={`${choiceClass} ${selected ? "bg-gw-primary-soft font-medium text-gw-primary-text" : "bg-gw-surface-muted text-gw-text"}`}
+              >
+                <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border text-[10px] ${selected ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border bg-gw-surface text-transparent"}`}>✓</span>
+                {level}
+              </Link>
+            );
+          })}
+        </FilterGroup>
+
+        <FilterGroup label="Price">
+          {PRICE_RANGES.map((price) => {
+            const selected = minPrice === price.min && maxPrice === price.max;
+            return (
+              <Link
+                key={price.label}
+                href={withParams(selected ? { min_price: undefined, max_price: undefined } : { min_price: price.min === undefined ? undefined : String(price.min), max_price: price.max === undefined ? undefined : String(price.max) })}
+                role="radio"
+                aria-checked={selected}
+                className={`${choiceClass} ${selected ? "bg-gw-primary-soft font-medium text-gw-primary-text" : "bg-gw-surface-muted text-gw-text"}`}
+              >
+                <span className={`h-4 w-4 shrink-0 rounded-full border-[5px] ${selected ? "border-gw-primary bg-gw-surface" : "border-gw-border bg-gw-surface"}`} />
+                {price.label}
+              </Link>
+            );
+          })}
+        </FilterGroup>
+
+        {activeFilterCount > 0 && (
+          <Link
+            href={withParams({ category: undefined, level: undefined, min_price: undefined, max_price: undefined })}
+            className="mt-4 flex h-10 items-center justify-center rounded-lg border border-gw-border text-[13px] font-medium text-gw-text no-underline hover:border-gw-primary-border hover:text-gw-primary-text"
+          >
+            Clear filters
+          </Link>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-4 first:mt-0">
+      <div className="mb-2.5 font-mono text-[10px] tracking-wider uppercase text-gw-text-faint">{label}</div>
+      <div className="grid grid-cols-2 gap-2">{children}</div>
+    </div>
+  );
+}
+
 export default async function CoursesPage({
   searchParams,
 }: {
@@ -91,10 +198,10 @@ export default async function CoursesPage({
   });
 
   return (
-    <div className="mx-auto max-w-[1440px] px-6 py-7 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:overflow-hidden">
-      <div className="flex items-end justify-between gap-5">
+    <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 sm:py-7 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:overflow-hidden">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
         <div>
-          <h1 className="font-serif text-[36px] font-semibold tracking-tight leading-none text-gw-ink">
+          <h1 className="font-serif text-[32px] font-semibold tracking-tight leading-none text-gw-ink sm:text-[36px]">
             {q
               ? "Search results"
               : selectedCategories.length === 1
@@ -128,10 +235,10 @@ export default async function CoursesPage({
         </details>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
+      <div className="-mx-4 mt-5 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         <Link
           href={withParams({ category: undefined })}
-          className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium no-underline hover:no-underline ${
+          className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium no-underline hover:no-underline ${
             selectedCategories.length === 0 ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border-soft bg-gw-surface text-gw-text hover:border-gw-primary-border"
           }`}
         >
@@ -141,7 +248,7 @@ export default async function CoursesPage({
           <Link
             key={item}
             href={withParams({ category: toggleValue(selectedCategories, item) })}
-            className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium no-underline hover:no-underline ${
+            className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium no-underline hover:no-underline ${
               selectedCategories.includes(item) ? "border-gw-primary bg-gw-primary text-white" : "border-gw-border-soft bg-gw-surface text-gw-text hover:border-gw-primary-border hover:text-gw-primary-text"
             }`}
           >
@@ -150,8 +257,20 @@ export default async function CoursesPage({
         ))}
       </div>
 
+      <div className="mt-4 lg:hidden">
+        <MobileFilters
+          categories={categories}
+          selectedCategories={selectedCategories}
+          selectedLevels={selectedLevels}
+          minPrice={min_price}
+          maxPrice={max_price}
+          activeFilterCount={activeFilterCount}
+          withParams={withParams}
+        />
+      </div>
+
       <div className="mt-5 grid grid-cols-1 items-start gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[248px_minmax(0,1fr)] lg:items-stretch">
-        <aside className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 shadow-[0_8px_24px_-20px_rgba(28,30,42,0.35)] lg:self-start lg:max-h-full lg:overflow-y-auto lg:overscroll-contain">
+        <aside className="hidden rounded-2xl border border-gw-border-soft bg-gw-surface p-5 shadow-[0_8px_24px_-20px_rgba(28,30,42,0.35)] lg:block lg:self-start lg:max-h-full lg:overflow-y-auto lg:overscroll-contain">
           <div className="mb-5 flex items-center justify-between">
             <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Filters</div>
             {activeFilterCount > 0 && <span className="rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[10px] text-gw-primary-text">{activeFilterCount}</span>}

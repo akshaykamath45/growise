@@ -10,28 +10,28 @@ export function HeroSection({
 }) {
   return (
     <section className="bg-gw-paper border-b border-gw-border-soft">
-      <div className="max-w-[1240px] mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-14 items-center">
+      <div className="mx-auto grid max-w-[1240px] grid-cols-1 items-center gap-8 px-4 py-10 sm:px-6 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
         <div>
           <div className="font-mono text-[11px] tracking-[0.16em] uppercase text-gw-primary">
             Learning that adapts to you.
           </div>
-          <h1 className="font-serif text-[54px] xl:text-[62px] leading-[1.05] tracking-tight mt-4 max-w-[15ch]">
+          <h1 className="mt-4 max-w-[15ch] font-serif text-[42px] leading-[1.04] tracking-tight sm:text-[54px] xl:text-[62px]">
             Learn what you&apos;ll actually use next.
           </h1>
-          <p className="mt-5 text-[17px] leading-relaxed text-gw-text max-w-[44ch]">
+          <p className="mt-5 max-w-[44ch] text-[16px] leading-relaxed text-gw-text sm:text-[17px]">
             You don&apos;t tell Growise what you want. It reads what you explore, and turns that into
             your next best course.
           </p>
-          <div className="flex items-center gap-3 mt-8 flex-wrap">
+          <div className="mt-7 flex flex-col gap-2.5 min-[390px]:flex-row min-[390px]:items-center sm:mt-8 sm:gap-3">
             <Link
               href="/courses"
-              className="h-12 px-6 rounded-[10px] bg-gw-primary text-white text-[15px] font-medium leading-[48px] no-underline hover:no-underline hover:bg-gw-primary-hover whitespace-nowrap"
+              className="h-12 rounded-[10px] bg-gw-primary px-6 text-center text-[15px] font-medium leading-[48px] text-white no-underline hover:bg-gw-primary-hover hover:no-underline"
             >
               Explore courses
             </Link>
             <a
               href="#how"
-              className="h-12 px-6 rounded-[10px] border border-gw-border bg-gw-surface text-[15px] font-medium leading-[48px] text-gw-text no-underline hover:no-underline hover:border-gw-primary-border hover:text-gw-primary-text whitespace-nowrap"
+              className="h-12 rounded-[10px] border border-gw-border bg-gw-surface px-6 text-center text-[15px] font-medium leading-[48px] text-gw-text no-underline hover:border-gw-primary-border hover:text-gw-primary-text hover:no-underline"
             >
               See how it works
             </a>
@@ -41,7 +41,7 @@ export function HeroSection({
           </div>
         </div>
 
-        <div className="home-hero-frame flex lg:justify-end">
+        <div className="home-hero-frame flex justify-center lg:justify-end">
           <div className="home-hero-art">
             <Image
               src="/hero-section-right.png"
