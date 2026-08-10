@@ -64,9 +64,10 @@ export const authApi = {
 
 // ---- Products ----
 export interface ProductQuery {
-  category?: string;
-  level?: string;
+  category?: string | string[];
+  level?: string | string[];
   q?: string;
+  min_price?: number;
   max_price?: number;
   limit?: number;
   offset?: number;
@@ -76,7 +77,11 @@ function toQueryString(query: Record<string, unknown>): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== null && value !== "") {
-      params.set(key, String(value));
+      if (Array.isArray(value)) {
+        value.forEach((item) => params.append(key, String(item)));
+      } else {
+        params.set(key, String(value));
+      }
     }
   }
   const qs = params.toString();

@@ -45,8 +45,10 @@ export function Navbar() {
   const navLink = (href: string, label: string, dot?: boolean) => (
     <Link
       href={href}
-      className={`text-sm flex items-center gap-1.5 no-underline hover:no-underline ${
-        pathname === href ? "font-semibold text-gw-ink" : "font-medium text-gw-text"
+      className={`h-8 px-2.5 rounded-[7px] text-sm flex items-center gap-1.5 no-underline hover:no-underline ${
+        pathname === href
+          ? "font-semibold text-gw-primary-hover bg-gw-primary-soft"
+          : "font-medium text-gw-text hover:text-gw-ink hover:bg-gw-surface-muted"
       }`}
     >
       {label}
@@ -55,22 +57,22 @@ export function Navbar() {
   );
 
   return (
-    <header className="sticky top-0 z-20 h-[60px] bg-white/90 backdrop-blur border-b border-gw-border-soft">
-      <div className="max-w-[1440px] mx-auto h-full px-6 flex items-center gap-7">
+    <header className="sticky top-0 z-20 h-16 bg-white/90 backdrop-blur border-b border-gw-border-soft">
+      <div className="max-w-[1440px] mx-auto h-full px-6 flex items-center gap-5">
         <Link href="/" className="flex items-center gap-2 no-underline hover:no-underline">
           <span className="w-5 h-5 rounded-md bg-gw-primary inline-block" />
           <span className="text-base font-semibold tracking-tight text-gw-ink">Growise</span>
         </Link>
 
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-1">
           {navLink("/courses", "Catalog")}
           {user && navLink("/for-you", "For you", true)}
           {user?.role === "admin" && navLink("/admin/courses", "Admin")}
         </nav>
 
-        <form onSubmit={handleSearch} className="flex-1 max-w-[320px] ml-3">
-          <div className="h-[34px] border border-gw-border-soft rounded-[9px] bg-gw-surface-muted flex items-center px-3 gap-2 focus-within:border-gw-primary-border">
-            <span className="w-[11px] h-[11px] rounded-full border-[1.5px] border-gw-text-placeholder" />
+        <form onSubmit={handleSearch} className="hidden w-full max-w-[350px] ml-1 md:block">
+          <div className="h-8 border border-gw-border-soft rounded-[8px] bg-gw-surface-muted flex items-center px-3 gap-2 focus-within:border-gw-primary-border focus-within:bg-white">
+            <span className="relative w-[11px] h-[11px] rounded-full border-[1.5px] border-gw-text-placeholder after:absolute after:w-[5px] after:h-[1.5px] after:bg-gw-text-placeholder after:-right-1 after:-bottom-0.5 after:rotate-45 after:rounded-full" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -80,7 +82,7 @@ export function Navbar() {
           </div>
         </form>
 
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-3.5">
           {loading ? null : user ? (
             <div className="relative" ref={menuRef}>
               <button
@@ -118,7 +120,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/signup"
-                className="h-9 px-4 rounded-[10px] bg-gw-primary text-white text-sm font-medium flex items-center no-underline hover:no-underline hover:bg-gw-primary-hover"
+                className="h-10 px-[18px] rounded-[8px] bg-gw-primary-hover text-white text-sm font-medium flex items-center no-underline hover:no-underline hover:bg-gw-primary"
               >
                 Sign up
               </Link>

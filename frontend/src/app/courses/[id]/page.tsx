@@ -62,7 +62,7 @@ export default async function CourseDetailPage({
             <img
               src={`${API_URL}${product.image_url}`}
               alt={product.title}
-              className="mt-6 w-full aspect-video object-cover rounded-2xl border border-gw-border-soft shadow-[0_10px_28px_-20px_rgba(28,30,42,0.38)]"
+              className="course-mobile-cover mt-6 w-full aspect-video object-cover rounded-2xl border border-gw-border-soft shadow-[0_10px_28px_-20px_rgba(28,30,42,0.38)]"
             />
           )}
 

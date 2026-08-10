@@ -4,7 +4,7 @@ export function CourseCurriculum({ content }: { content: CourseContent }) {
   const lessonCount = content.sections.reduce((count, section) => count + section.lessons.length, 0);
 
   return (
-    <section aria-labelledby="course-curriculum" className="mt-10">
+    <section aria-labelledby="course-curriculum" className="mt-10 scroll-mt-24">
       <div className="flex items-end justify-between gap-4 border-b border-gw-border-soft pb-4">
         <div>
           <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Course curriculum</div>

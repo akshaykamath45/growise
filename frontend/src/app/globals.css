@@ -119,6 +119,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The cover belongs in the purchase rail on desktop, but remains inline on small screens. */
+@media (min-width: 1024px) {
+  .course-mobile-cover {
+    display: none;
+  }
+}
+
 @layer base {
   a {
     color: var(--gw-primary);

@@ -14,20 +14,23 @@ router = APIRouter(prefix="/api/products", tags=["products"])
 @router.get("", response_model=list[ProductOut])
 def list_products(
     db: Session = Depends(get_db),
-    category: str | None = None,
-    level: str | None = None,
+    category: list[str] | None = Query(default=None),
+    level: list[str] | None = Query(default=None),
     q: str | None = None,
+    min_price: float | None = None,
     max_price: float | None = None,
     limit: int = Query(24, le=100),
     offset: int = 0,
 ):
     query = db.query(Product)
     if category:
-        query = query.filter(Product.category == category)
+        query = query.filter(Product.category.in_(category))
     if level:
-        query = query.filter(Product.level == level)
+        query = query.filter(Product.level.in_(level))
     if max_price is not None:
         query = query.filter(Product.price <= max_price)
+    if min_price is not None:
+        query = query.filter(Product.price >= min_price)
     if q:
         like = f"%{q}%"
         query = query.filter(or_(Product.title.ilike(like), Product.description.ilike(like)))
