@@ -1,22 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { track } from "@/lib/tracker";
-import { API_URL } from "@/lib/api";
+import { API_URL, ApiError, enrollmentsApi } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { Product } from "@/lib/types";
 
 export function EnrollPanel({ product }: { product: Product }) {
-  const [enrolled, setEnrolled] = useState(false);
+  const { user, token, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // null = not yet known. Derived flags below avoid setting state synchronously in the effect.
+  const [enrolledState, setEnrolledState] = useState<boolean | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loggedIn = Boolean(token);
+  const enrolled = loggedIn && enrolledState === true;
+  const checking = !authLoading && loggedIn && enrolledState === null;
+
   const includes = [
     "Lifetime access",
     `${product.lessons_count} on-demand video lessons`,
     "Certificate of completion",
   ];
 
-  function handleEnroll() {
+  useEffect(() => {
+    if (authLoading || !token) return;
+    let active = true;
+    enrollmentsApi
+      .mine(token)
+      .then((list) => {
+        if (active) setEnrolledState(list.some((e) => e.product.id === product.id));
+      })
+      .catch(() => {
+        // A failed check shouldn't block enrolling — fall back to the un-enrolled state.
+        if (active) setEnrolledState(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authLoading, token, product.id]);
+
+  async function handleEnroll() {
     track({ event_type: "enroll_click", product_id: product.id, metadata: { category: product.category } });
-    setEnrolled(true);
+
+    if (!token) {
+      router.push(`/login?next=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      await enrollmentsApi.enroll(product.id, token);
+      setEnrolledState(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't enroll right now. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
+
+  const busy = authLoading || checking || submitting;
 
   return (
     <aside aria-label="Course enrollment" className="flex flex-col gap-3 lg:sticky lg:top-20">
@@ -47,15 +96,32 @@ export function EnrollPanel({ product }: { product: Product }) {
               <span className="text-base text-gw-text-placeholder line-through">${product.old_price}</span>
             )}
           </div>
-          <button
-            onClick={handleEnroll}
-            disabled={enrolled}
-            className="mt-4 w-full h-11 rounded-[9px] bg-gw-primary text-white text-[15px] font-medium cursor-pointer border-0 hover:bg-gw-primary-hover disabled:opacity-70 disabled:cursor-default"
-          >
-            {enrolled ? "Added to your learning ✓" : "Enroll now"}
-          </button>
+          {enrolled ? (
+            <>
+              <div className="mt-4 flex items-center justify-center gap-2 rounded-[9px] border border-gw-success/30 bg-gw-success/10 py-2 text-[13px] font-medium text-gw-success">
+                <span aria-hidden>✓</span> You&apos;re enrolled
+              </div>
+              <Link
+                href="/my-learning"
+                className="mt-2.5 flex h-11 w-full items-center justify-center rounded-[9px] bg-gw-primary text-[15px] font-medium text-white no-underline hover:bg-gw-primary-hover hover:no-underline"
+              >
+                Go to My Learning →
+              </Link>
+            </>
+          ) : (
+            <button
+              onClick={handleEnroll}
+              disabled={busy}
+              className="mt-4 w-full h-11 rounded-[9px] bg-gw-primary text-white text-[15px] font-medium cursor-pointer border-0 hover:bg-gw-primary-hover disabled:opacity-70 disabled:cursor-default"
+            >
+              {submitting ? "Enrolling…" : "Enroll now"}
+            </button>
+          )}
+
+          {error && <div className="mt-2.5 text-center text-[12.5px] text-gw-error">{error}</div>}
+
           <div className="mt-3 text-center font-mono text-[9.5px] tracking-wide text-gw-text-placeholder">
-            30-DAY MONEY-BACK GUARANTEE
+            {enrolled ? "FULL ACCESS · LIFETIME" : user ? "30-DAY MONEY-BACK GUARANTEE" : "LOG IN TO ENROLL"}
           </div>
         </div>
 

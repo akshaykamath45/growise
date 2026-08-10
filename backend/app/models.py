@@ -11,6 +11,7 @@ from sqlalchemy import (
     JSON,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +41,9 @@ class User(Base):
     recommendations: Mapped[list["Recommendation"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    enrollments: Mapped[list["Enrollment"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Product(Base):
@@ -63,6 +67,21 @@ class Product(Base):
     vector_synced: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Enrollment(Base):
+    """A user's enrollment in a course. One row per (user, product)."""
+
+    __tablename__ = "enrollments"
+    __table_args__ = (UniqueConstraint("user_id", "product_id", name="uq_enrollment_user_product"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped["User"] = relationship(back_populates="enrollments")
+    product: Mapped["Product"] = relationship()
 
 
 class Event(Base):

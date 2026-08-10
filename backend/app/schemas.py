@@ -97,6 +97,19 @@ class ProductOut(ProductBase):
     model_config = {"from_attributes": True}
 
 
+# ---- Enrollments ----
+class EnrollmentCreate(BaseModel):
+    product_id: int
+
+
+class EnrollmentOut(BaseModel):
+    id: int
+    product: ProductOut
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # ---- Events ----
 class EventIn(BaseModel):
     event_type: str

@@ -1,4 +1,4 @@
-import type { Product, ProductInput, Recommendation, User } from "./types";
+import type { Enrollment, Product, ProductInput, Recommendation, User } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -115,6 +115,17 @@ export const eventsApi = {
     request<{ accepted: number }>(
       "/api/events/batch",
       { method: "POST", body: JSON.stringify({ events }) },
+      token
+    ),
+};
+
+// ---- Enrollments ----
+export const enrollmentsApi = {
+  mine: (token: string) => request<Enrollment[]>("/api/enrollments/me", {}, token),
+  enroll: (productId: number, token: string) =>
+    request<Enrollment>(
+      "/api/enrollments",
+      { method: "POST", body: JSON.stringify({ product_id: productId }) },
       token
     ),
 };

@@ -29,10 +29,6 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
   if (pathname === "/login" || pathname === "/signup") return null;
 
   function handleSearch(e: React.FormEvent) {
@@ -67,6 +63,7 @@ export function Navbar() {
         <nav className="flex items-center gap-1">
           {navLink("/courses", "Catalog")}
           {user && navLink("/for-you", "For you", true)}
+          {user && navLink("/my-learning", "My learning")}
           {user?.role === "admin" && navLink("/admin/courses", "Admin")}
         </nav>
 
@@ -101,6 +98,13 @@ export function Navbar() {
                     <div className="text-[13px] font-medium text-gw-ink truncate">{user.email}</div>
                     <div className="text-[11px] text-gw-text-faint capitalize mt-0.5">{user.role} account</div>
                   </div>
+                  <Link
+                    href="/my-learning"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:no-underline hover:bg-gw-surface-muted"
+                  >
+                    My learning
+                  </Link>
                   <button
                     onClick={() => {
                       setMenuOpen(false);

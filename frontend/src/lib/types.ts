@@ -50,6 +50,12 @@ export type ProductInput = Omit<Product, "id" | "created_at" | "vector_synced" |
   course_content?: CourseContent | null;
 };
 
+export interface Enrollment {
+  id: number;
+  product: Product;
+  created_at: string;
+}
+
 export interface RecommendationItem {
   product: Product;
   rank: number;

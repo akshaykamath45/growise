@@ -8,7 +8,9 @@
       "Bash(pkill -f \"pip install sentence-transformers\")",
       "Bash(curl -s http://127.0.0.1:8000/api/health)",
       "Read(//private/tmp/**)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/auth/signup -H \"Content-Type: application/json\" -d '{\"email\":\"newlearner@example.com\",\"password\":\"NewPass12345\"}')",
+      "Bash(python3 -c \"import sys,json;print\\(json.load\\(sys.stdin\\)['access_token']\\)\")"
     ]
   }
 }

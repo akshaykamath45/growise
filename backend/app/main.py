@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import Base, engine, ensure_schema
-from app.routers import auth, events, products, recommendations
+from app.routers import auth, enrollments, events, products, recommendations
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,6 +31,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(events.router)
+app.include_router(enrollments.router)
 app.include_router(recommendations.router)
 
 

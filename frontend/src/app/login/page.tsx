@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
 import { MinimalAuthLayout } from "@/components/minimal-auth-layout";
@@ -14,9 +14,18 @@ const DEMO_ACCOUNTS = {
 
 type DemoKind = keyof typeof DEMO_ACCOUNTS;
 
-export default function LoginPage() {
+/** Only same-origin relative paths are accepted, so `?next=` can't be used to
+ *  bounce someone to another site after login. */
+function safeNext(value: string | null): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
+function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNext(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +36,7 @@ export default function LoginPage() {
     setError(null);
     try {
       const user = await login(loginEmail, loginPassword);
-      router.push(user.role === "admin" ? "/admin/courses" : "/courses");
+      router.push(next ?? (user.role === "admin" ? "/admin/courses" : "/courses"));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
     }
@@ -54,7 +63,7 @@ export default function LoginPage() {
   const busy = submitting || demoLoading !== null;
 
   return (
-    <MinimalAuthLayout>
+    <>
       <h1 className="text-[22px] font-semibold tracking-tight leading-tight text-center">Welcome back</h1>
       <p className="mt-1.5 text-[14px] text-gw-text-muted text-center">Continue where you left off.</p>
 
@@ -123,6 +132,20 @@ export default function LoginPage() {
           Create an account
         </Link>
       </p>
+    </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <MinimalAuthLayout>
+      <Suspense
+        fallback={
+          <div className="py-8 text-center text-[14px] text-gw-text-muted">Loading…</div>
+        }
+      >
+        <LoginForm />
+      </Suspense>
     </MinimalAuthLayout>
   );
 }
