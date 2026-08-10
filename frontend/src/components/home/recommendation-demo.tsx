@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { FadeSwap } from "./fade-swap";
 import type { TopicData } from "./topic";
 
@@ -110,8 +111,10 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
         </div>
       </div>
 
-      {/* the single recommendation moment */}
-      <div className="mt-12 bg-gw-agent-bg border border-gw-agent-border rounded-2xl px-7 py-7 max-w-[620px] shadow-[0_24px_50px_-30px_rgba(185,110,24,0.5)]">
+      {/* the single recommendation moment, with the orbit illustration filling
+          the space beside it on wide screens */}
+      <div className="mt-12 grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,620px)_minmax(0,1fr)]">
+      <div className="bg-gw-agent-bg border border-gw-agent-border rounded-2xl px-7 py-7 shadow-[0_24px_50px_-30px_rgba(185,110,24,0.5)]">
         <div className="flex items-center gap-2.5">
           <span className="relative w-[18px] h-[18px] flex items-center justify-center">
             <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />
@@ -141,6 +144,19 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
             ${topic.recommendation.price} · {topic.recommendation.duration_label} ·{" "}
             {topic.recommendation.lessons_count} lessons
           </span>
+        </div>
+      </div>
+
+        <div className="hidden lg:flex lg:justify-end">
+          <Image
+            src="/recommendation.png"
+            alt=""
+            aria-hidden
+            width={1477}
+            height={1065}
+            sizes="520px"
+            className="h-auto w-full max-w-[520px]"
+          />
         </div>
       </div>
     </FadeSwap>

@@ -17,16 +17,10 @@ export default async function HomePage() {
   const topics = buildTopics(categories, products);
   const instructors = buildInstructors(products);
 
-  // One cover per category, so the hero reads as the breadth of the catalog.
-  const covers = categories
-    .map((c) => products.find((p) => p.category === c && p.image_url))
-    .filter((p): p is (typeof products)[number] => Boolean(p))
-    .slice(0, 4);
-
   return (
     <div>
       {/* 1–2. What is Growise, and why is that useful */}
-      <HeroSection covers={covers} totalCourses={products.length} categoryCount={categories.length} />
+      <HeroSection totalCourses={products.length} categoryCount={categories.length} />
 
       {/* 3. How does it work */}
       <section id="how" className="bg-gw-bg border-b border-gw-border-soft">

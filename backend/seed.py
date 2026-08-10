@@ -8,12 +8,13 @@ from copy import deepcopy
 
 from app.auth import hash_password
 from app.database import Base, SessionLocal, engine, ensure_schema
-from app.models import Product, User, UserRole
+from app.models import Event, Product, RecommendationItem, User, UserRole
 from app.schemas import ProductCreate
 from app.services import product_service
 
 ADMIN_EMAIL = "admin@growise.dev"
 ADMIN_PASSWORD = "AdminPass123"
+RETIRED_COURSE_TITLES = {"Cloud Security Essentials"}
 
 COURSES: list[dict] = [
     # ---- AI & Agents ----
@@ -45,6 +46,11 @@ COURSES: list[dict] = [
          level="Beginner", price=49, old_price=99, duration_label="5H 45M", lessons_count=28,
          rating=4.5, reviews_count=3048, tags="prompting,fundamentals",
          description="A systematic approach to prompting: templates, few-shot patterns, and structured outputs, taught like an engineering discipline instead of a bag of tricks."),
+    dict(title="Agent Security & Guardrails", instructor="Yusuf Demir", category="AI & Agents",
+         level="Intermediate", price=69, old_price=129, duration_label="8H 20M", lessons_count=32,
+         rating=4.7, reviews_count=584, tags="agent-security,guardrails,safety,ai",
+         image_url="/static/covers/43.png",
+         description="Keep capable agents safe in the real world — permission boundaries, prompt-injection defense, data controls, and the graceful failure paths that protect users and systems."),
 
     # ---- Web Development ----
     dict(title="Full-Stack Next.js: From Zero to Deployed", instructor="Priya Nair", category="Web Development",
@@ -75,6 +81,16 @@ COURSES: list[dict] = [
          level="Intermediate", price=65, old_price=119, duration_label="7H 40M", lessons_count=28,
          rating=4.7, reviews_count=876, tags="auth,security,backend",
          description="Sessions, JWTs, OAuth, and RBAC — implement auth you'd trust in production, and understand exactly what each approach trades off."),
+    dict(title="Web Testing with Playwright", instructor="Diego Morales", category="Web Development",
+         level="Intermediate", price=55, old_price=99, duration_label="7H 25M", lessons_count=28,
+         rating=4.7, reviews_count=731, tags="playwright,testing,e2e,quality",
+         image_url="/static/covers/44.png",
+         description="Build a testing strategy that catches product regressions before customers do — reliable Playwright suites, visual checks, test data, and CI workflows that stay fast."),
+    dict(title="Accessibility-First Frontend Development", instructor="Jonas Weber", category="Web Development",
+         level="Intermediate", price=59, old_price=None, duration_label="8H 10M", lessons_count=30,
+         rating=4.8, reviews_count=662, tags="accessibility,a11y,frontend,web",
+         image_url="/static/covers/45.png",
+         description="Build web experiences that work for every user from the first component — semantic HTML, keyboard behaviour, screen-reader context, and accessible design-system patterns."),
 
     # ---- Data Science ----
     dict(title="Feature Engineering at Scale", instructor="Priya Raman", category="Data Science",
@@ -215,6 +231,11 @@ COURSES: list[dict] = [
                  },
              ],
          }),
+    dict(title="Platform Engineering Foundations", instructor="Grace Odhiambo", category="Cloud & DevOps",
+         level="Intermediate", price=69, old_price=129, duration_label="9H 05M", lessons_count=34,
+         rating=4.7, reviews_count=446, tags="platform-engineering,developer-experience,internal-tools",
+         image_url="/static/covers/46.png",
+         description="Create an internal platform developers want to use — paved paths, self-service infrastructure, golden templates, and the product thinking that improves delivery without adding bureaucracy."),
 
     # ---- Design ----
     dict(title="Design Systems for Product Teams", instructor="Noor Haddad", category="Design",
@@ -333,10 +354,6 @@ COURSES: list[dict] = [
          level="Intermediate", price=65, old_price=None, duration_label="5H 40M", lessons_count=20,
          rating=4.6, reviews_count=480, tags="threat-modeling",
          description="STRIDE, attack trees, and the workshop format that gets a whole team thinking about what could go wrong before it ships."),
-    dict(title="Cloud Security Essentials", instructor="Naledi Mokoena", category="Cybersecurity",
-         level="Intermediate", price=69, old_price=119, duration_label="7H 50M", lessons_count=28,
-         rating=4.7, reviews_count=690, tags="cloud-security,iam",
-         description="IAM misconfigurations, exposed storage, and the shared-responsibility gaps that cause most cloud breaches — and how to close them."),
     dict(title="Ethical Hacking & Penetration Testing", instructor="Rahul Mehta", category="Cybersecurity",
          level="Advanced", price=89, old_price=159, duration_label="12H 10M", lessons_count=44,
          rating=4.8, reviews_count=1050, tags="pentesting,ethical-hacking",
@@ -367,6 +384,7 @@ COURSE_OUTLINES: dict[str, tuple[str, str, str, str]] = {
     "Multi-Agent Systems in Practice": ("Coordination architectures", "Planning, delegation and memory", "Critique loops and failure handling", "Measuring multi-agent performance"),
     "Retrieval Systems that Scale": ("Corpus design and chunking", "Hybrid search and re-ranking", "Metadata, freshness and filtering", "Production retrieval operations"),
     "Prompt Engineering for Engineers": ("Prompt foundations and constraints", "Few-shot patterns and templates", "Structured outputs and tool prompts", "Testing prompts as an engineering system"),
+    "Agent Security & Guardrails": ("Agent threat models and permissions", "Prompt-injection and data defenses", "Guardrails, approvals and fallbacks", "Security evaluation and continuous monitoring"),
     "Full-Stack Next.js: From Zero to Deployed": ("App Router and component architecture", "Data, forms and server actions", "Authentication and product features", "Testing, deployment and operations"),
     "Advanced React Patterns": ("Component API design", "Reusable state and custom hooks", "Composition and state machines", "Performance and production patterns"),
     "API Design with FastAPI": ("Resource modelling and HTTP semantics", "Validation, errors and documentation", "Pagination, filtering and versioning", "Testing and operating APIs"),
@@ -374,6 +392,8 @@ COURSE_OUTLINES: dict[str, tuple[str, str, str, str]] = {
     "Web Performance Engineering": ("Measuring user-centred performance", "Rendering and loading strategy", "JavaScript, assets and caching", "Diagnosing and sustaining improvements"),
     "CSS That Scales: Design Systems in Practice": ("Tokens and styling architecture", "Component styles and variants", "Responsive layouts and accessibility", "Governance and team adoption"),
     "Authentication & Authorization Done Right": ("Identity, sessions and tokens", "Authorization models and permissions", "OAuth, security and threat modelling", "Testing and operating auth systems"),
+    "Web Testing with Playwright": ("Testing strategy and reliable selectors", "Browser workflows and test data", "Visual, accessibility and API checks", "CI speed, flake control and reporting"),
+    "Accessibility-First Frontend Development": ("Semantic structure and inclusive foundations", "Keyboard, focus and interaction patterns", "Screen readers, forms and dynamic content", "Testing and scaling accessible components"),
     "Feature Engineering at Scale": ("Feature discovery and data quality", "Reusable feature pipelines", "Training-serving consistency", "Monitoring drift and feature operations"),
     "Streaming Data Pipelines with Kafka": ("Topics, partitions and consumer groups", "Schema evolution and event design", "Delivery guarantees and recovery", "Operating streaming systems"),
     "Statistics for Data Scientists": ("Probability and sampling intuition", "Estimation and confidence intervals", "Hypothesis tests and interpretation", "Communicating statistical decisions"),
@@ -388,6 +408,7 @@ COURSE_OUTLINES: dict[str, tuple[str, str, str, str]] = {
     "Observability: Logs, Metrics, and Traces": ("Signals and service context", "Structured logs and useful metrics", "Tracing distributed requests", "Dashboards, alerts and incident response"),
     "Docker Deep Dive": ("Images, layers and build strategy", "Container networking and storage", "Compose and local development", "Security, debugging and delivery"),
     "Site Reliability Engineering Fundamentals": ("Reliability as a product decision", "SLIs, SLOs and error budgets", "Incident response and learning", "Sustainable on-call and improvement"),
+    "Platform Engineering Foundations": ("Platform strategy and developer journeys", "Paved paths and self-service workflows", "Golden templates and internal products", "Adoption, measurement and platform evolution"),
     "Design Systems for Product Teams": ("System strategy and interface audits", "Tokens, type and visual foundations", "Components and accessible behaviour", "Governance, adoption and evolution"),
     "UX Research Without a Budget": ("Research questions and lightweight planning", "Interviews, tests and fast evidence", "Synthesising signals into insights", "Sharing findings and changing decisions"),
     "Product Design Portfolio Masterclass": ("Portfolio strategy and story selection", "Case-study narrative and craft", "Presenting process and outcomes", "Feedback, refinement and interview readiness"),
@@ -397,7 +418,6 @@ COURSE_OUTLINES: dict[str, tuple[str, str, str, str]] = {
     "Visual Design Fundamentals": ("Hierarchy, balance and layout", "Typography and readable systems", "Colour, imagery and visual rhythm", "Critique and practical application"),
     "Application Security Fundamentals": ("Threats, trust boundaries and OWASP", "Input handling and common exploits", "Authentication, sessions and secrets", "Security testing and remediation"),
     "Threat Modeling in Practice": ("System mapping and assets", "STRIDE, attack trees and abuse cases", "Prioritising risks and mitigations", "Facilitating threat-model workshops"),
-    "Cloud Security Essentials": ("Cloud responsibility and asset discovery", "IAM, credentials and least privilege", "Network, storage and workload protection", "Detection, response and compliance"),
     "Ethical Hacking & Penetration Testing": ("Legal scoping and reconnaissance", "Enumeration and controlled exploitation", "Post-exploitation and evidence", "Reporting and remediation guidance"),
     "Security for API Backends": ("API attack surface and auth", "Validation, rate limits and abuse controls", "Secrets, logging and secure operations", "Testing and hardening an API"),
     "Incident Response Playbooks": ("Preparation and incident roles", "Triage, containment and communication", "Eradication, recovery and evidence", "Post-incident learning and playbooks"),
@@ -520,6 +540,17 @@ def main():
             print(f"Created admin user: {ADMIN_EMAIL} / {ADMIN_PASSWORD}")
         else:
             print(f"Admin user already exists: {ADMIN_EMAIL}")
+
+        retired_products = db.query(Product).filter(Product.title.in_(RETIRED_COURSE_TITLES)).all()
+        for retired in retired_products:
+            event_refs = db.query(Event).filter(Event.product_id == retired.id).count()
+            recommendation_refs = db.query(RecommendationItem).filter(RecommendationItem.product_id == retired.id).count()
+            if event_refs or recommendation_refs:
+                raise RuntimeError(
+                    f"Cannot retire {retired.title!r}: {event_refs} event and {recommendation_refs} recommendation references exist."
+                )
+            product_service.delete_product(db, retired)
+            print(f"Retired unreferenced course: {retired.title}")
 
         existing_products = {p.title: p for p in db.query(Product).all()}
         created = 0

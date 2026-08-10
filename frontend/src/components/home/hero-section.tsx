@@ -1,55 +1,10 @@
 import Link from "next/link";
-import { API_URL } from "@/lib/api";
-import type { Product } from "@/lib/types";
-
-/** Hero visual: the catalog itself, not a recommendation.
- *  The demo section below is the only place recommendations are shown. */
-function CoverCollage({ covers }: { covers: Product[] }) {
-  if (covers.length < 4) return null;
-  const [a, b, c, d] = covers;
-
-  return (
-    <div className="grid grid-cols-2 gap-4 w-full max-w-[440px]">
-      <div className="flex flex-col gap-4 pt-8">
-        {[a, c].map((p) => (
-          <div
-            key={p.id}
-            className="rounded-xl overflow-hidden border border-gw-border-soft shadow-[0_16px_36px_-20px_rgba(28,30,42,0.4)]"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`${API_URL}${p.image_url}`}
-              alt={p.title}
-              className="w-full aspect-video object-cover"
-            />
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-col gap-4">
-        {[b, d].map((p) => (
-          <div
-            key={p.id}
-            className="rounded-xl overflow-hidden border border-gw-border-soft shadow-[0_16px_36px_-20px_rgba(28,30,42,0.4)]"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`${API_URL}${p.image_url}`}
-              alt={p.title}
-              className="w-full aspect-video object-cover"
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+import Image from "next/image";
 
 export function HeroSection({
-  covers,
   totalCourses,
   categoryCount,
 }: {
-  covers: Product[];
   totalCourses: number;
   categoryCount: number;
 }) {
@@ -87,7 +42,15 @@ export function HeroSection({
         </div>
 
         <div className="flex lg:justify-end">
-          <CoverCollage covers={covers} />
+          <Image
+            src="/hero-section-right.png"
+            alt="Growise course categories connected around a personalised recommendation"
+            width={1469}
+            height={1071}
+            priority
+            sizes="(max-width: 1024px) 100vw, 560px"
+            className="h-auto w-full max-w-[560px]"
+          />
         </div>
       </div>
     </section>
