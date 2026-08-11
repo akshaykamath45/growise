@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from app.agent.pipeline import MEANINGFUL_EVENT_TYPES
+from app.agent.pipeline import MEANINGFUL_EVENT_TYPES, is_meaningful_event
 from app.config import settings
 from app.models import Event, Recommendation, User
 
@@ -16,6 +16,24 @@ def get_active_recommendation(db: Session, user: User) -> Recommendation | None:
     )
 
 
+def _meaningful_event_count(
+    db: Session, user: User, created_after: datetime | None = None
+) -> int:
+    """Count only events which are eligible to influence recommendations.
+
+    ``time_on_page`` is stored even for short visits, so its duration cannot be
+    evaluated solely in SQL. Filtering the small, user-scoped result here keeps
+    the trigger in lockstep with the agent's own interest analysis.
+    """
+    query = db.query(Event).filter(
+        Event.user_id == user.id,
+        Event.event_type.in_(MEANINGFUL_EVENT_TYPES),
+    )
+    if created_after is not None:
+        query = query.filter(Event.created_at > created_after)
+    return sum(1 for event in query.all() if is_meaningful_event(event))
+
+
 def should_regenerate(db: Session, user: User) -> tuple[bool, str]:
     """Decide whether the agent should re-run for this user right now.
 
@@ -23,9 +41,7 @@ def should_regenerate(db: Session, user: User) -> tuple[bool, str]:
     real new signal (enough new meaningful events) and a cooldown has passed —
     otherwise serve the cached recommendation.
     """
-    event_count = (
-        db.query(Event).filter(Event.user_id == user.id, Event.event_type.in_(MEANINGFUL_EVENT_TYPES)).count()
-    )
+    event_count = _meaningful_event_count(db, user)
     if event_count == 0:
         return False, "no_signal"
 
@@ -37,15 +53,7 @@ def should_regenerate(db: Session, user: User) -> tuple[bool, str]:
     if last_created.tzinfo is None:
         last_created = last_created.replace(tzinfo=timezone.utc)
 
-    new_events = (
-        db.query(Event)
-        .filter(
-            Event.user_id == user.id,
-            Event.event_type.in_(MEANINGFUL_EVENT_TYPES),
-            Event.created_at > last_created,
-        )
-        .count()
-    )
+    new_events = _meaningful_event_count(db, user, created_after=last_created)
     cooldown_elapsed = datetime.now(timezone.utc) - last_created > timedelta(
         minutes=settings.recommendation_cooldown_minutes
     )

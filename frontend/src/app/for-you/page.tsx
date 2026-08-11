@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, recommendationsApi } from "@/lib/api";
@@ -33,7 +34,10 @@ export default function ForYouPage() {
     recommendationsApi
       .getForYou(token)
       .then(setRec)
-      .catch(() => setRec(null));
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : "Couldn't load your recommendation right now.");
+        setRec(null);
+      });
   }, [token]);
 
   useEffect(() => {
@@ -74,15 +78,17 @@ export default function ForYouPage() {
       {rec === null ? (
         <div className="mt-7 rounded-2xl border border-dashed border-gw-border bg-gw-surface p-7 text-center sm:mt-8 sm:p-14">
           <p className="font-serif text-lg text-gw-text-muted max-w-[40ch] mx-auto">
-            Still gathering signal. Browse a few courses or search for something you&apos;re curious about, and
-            the agent will put together a recommendation.
+            {error
+              ? "Your recommendation couldn't be generated yet. Browse a few courses, then try again."
+              : "Still gathering signal. Browse a few courses or search for something you're curious about, and the agent will put together a recommendation."}
           </p>
-          <a
+          {error && <p className="mt-3 text-sm text-gw-error">{error}</p>}
+          <Link
             href="/courses"
             className="inline-block mt-5 h-10 px-4 leading-10 rounded-[10px] bg-gw-primary text-white text-sm font-medium no-underline hover:no-underline hover:bg-gw-primary-hover"
           >
             Browse the catalog
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="mt-7 overflow-hidden rounded-2xl border border-gw-border-soft bg-gw-surface shadow-[0_1px_2px_rgba(28,30,42,0.05)] sm:mt-8">

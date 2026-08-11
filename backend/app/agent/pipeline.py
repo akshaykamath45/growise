@@ -13,10 +13,51 @@ from app.models import Event, Product, Recommendation, RecommendationItem, User
 
 logger = logging.getLogger(__name__)
 
-MEANINGFUL_EVENT_TYPES = ("product_view", "search", "course_card_click", "enroll_click")
+BASE_MEANINGFUL_EVENT_TYPES = (
+    "product_view",
+    "search",
+    "course_card_click",
+    "enroll_click",
+    "search_result_click",
+)
+# Kept separately because a time-on-page event is only meaningful after its
+# dwell threshold has been checked in ``is_meaningful_event`` below.
+MEANINGFUL_EVENT_TYPES = (*BASE_MEANINGFUL_EVENT_TYPES, "time_on_page")
 RETRIEVE_N = 6
 RELEVANCE_DISTANCE_THRESHOLD = 1.3
 MAX_RECOMMENDED_ITEMS = 3
+
+# A page visit only counts as genuine interest once dwell crosses this floor —
+# a 2-second bounce shouldn't weigh the same as a considered read.
+DWELL_QUALIFYING_SECONDS = 20
+DWELL_MAX_WEIGHT = 3
+
+EVENT_WEIGHTS = {
+    "product_view": 1,
+    "course_card_click": 1,
+    "search_result_click": 1,
+    "enroll_click": 3,
+}
+
+
+def _dwell_seconds(event: Event) -> int:
+    if not event.event_metadata:
+        return 0
+    try:
+        return int(json.loads(event.event_metadata).get("seconds", 0))
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return 0
+
+
+def is_meaningful_event(event: Event) -> bool:
+    """Return whether an event is strong enough to influence an agent run.
+
+    The database still retains short dwell events for analytics, but they must
+    not count toward the recommendation trigger or the interest profile.
+    """
+    if event.event_type == "time_on_page":
+        return _dwell_seconds(event) >= DWELL_QUALIFYING_SECONDS
+    return event.event_type in BASE_MEANINGFUL_EVENT_TYPES
 
 
 class AgentState(TypedDict, total=False):
@@ -34,25 +75,40 @@ class AgentState(TypedDict, total=False):
 
 def _ingest_activity(db: Session, user: User):
     def node(state: AgentState) -> dict:
-        events = (
+        candidate_events = (
             db.query(Event)
             .filter(Event.user_id == user.id, Event.event_type.in_(MEANINGFUL_EVENT_TYPES))
             .order_by(Event.created_at.desc())
-            .limit(60)
+            # Fetch extra rows because short dwell events are retained for
+            # analytics but filtered from agent reasoning below.
+            .limit(120)
             .all()
         )
+        events = [event for event in candidate_events if is_meaningful_event(event)][:60]
 
         category_counts: Counter[str] = Counter()
         search_terms: list[str] = []
         viewed_titles: list[str] = []
+        best_dwell: tuple[str, int] | None = None  # (title, seconds) of the longest qualifying dwell
 
         for e in events:
             if e.product_id:
                 product = db.get(Product, e.product_id)
                 if product:
-                    category_counts[product.category] += 1
-                    if e.event_type in ("product_view", "course_card_click") and product.title not in viewed_titles:
-                        viewed_titles.append(product.title)
+                    if e.event_type == "time_on_page":
+                        seconds = _dwell_seconds(e)
+                        if seconds >= DWELL_QUALIFYING_SECONDS:
+                            weight = min(DWELL_MAX_WEIGHT, seconds // DWELL_QUALIFYING_SECONDS)
+                            category_counts[product.category] += weight
+                            if best_dwell is None or seconds > best_dwell[1]:
+                                best_dwell = (product.title, seconds)
+                    else:
+                        category_counts[product.category] += EVENT_WEIGHTS.get(e.event_type, 1)
+                        if (
+                            e.event_type in ("product_view", "course_card_click", "search_result_click")
+                            and product.title not in viewed_titles
+                        ):
+                            viewed_titles.append(product.title)
             if e.event_type == "search" and e.search_query and e.search_query not in search_terms:
                 search_terms.append(e.search_query)
 
@@ -62,19 +118,23 @@ def _ingest_activity(db: Session, user: User):
 
         summary_parts = []
         if top_categories:
-            breakdown = ", ".join(f"{c} ({category_counts[c]} events)" for c in top_categories)
+            breakdown = ", ".join(f"{c} ({category_counts[c]} signals)" for c in top_categories)
             summary_parts.append(f"Most active categories: {breakdown}.")
         if search_terms:
             summary_parts.append(f"Recent searches: {', '.join(search_terms)}.")
         if viewed_titles:
             summary_parts.append(f"Recently viewed courses: {', '.join(viewed_titles)}.")
+        if best_dwell:
+            summary_parts.append(f"Spent {best_dwell[1]}s reading {best_dwell[0]}, suggesting real interest.")
 
         evidence = []
         if top_categories:
-            evidence.append(f"{category_counts[top_categories[0]]} events in {top_categories[0]}")
+            evidence.append(f"{category_counts[top_categories[0]]} signals in {top_categories[0]}")
         for term in search_terms[:2]:
             evidence.append(f'searched "{term}"')
-        if viewed_titles:
+        if best_dwell:
+            evidence.append(f"spent {best_dwell[1]}s on {best_dwell[0]}")
+        elif viewed_titles:
             evidence.append(f"viewed {viewed_titles[0]}")
 
         return {

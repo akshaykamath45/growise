@@ -32,6 +32,10 @@ def get_my_recommendation(db: Session = Depends(get_db), user: User = Depends(ge
     should, reason = should_regenerate(db, user)
     if should:
         rec = run_agent(db, user, trigger_reason=reason)
+        if rec is None:
+            # Do not make a failed agent run look like a learner with no
+            # behavioral signal. The client needs an actionable error state.
+            raise HTTPException(status_code=502, detail="The recommendation agent could not generate a result. Please try again.")
     else:
         rec = get_active_recommendation(db, user)
     return _to_out(rec) if rec else None
