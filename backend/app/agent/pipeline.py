@@ -2,14 +2,17 @@ import json
 import logging
 import re
 from collections import Counter
-from typing import TypedDict
+from datetime import datetime, timezone
+from time import perf_counter
+from typing import Callable, TypedDict
 
 from langgraph.graph import END, StateGraph
 from sqlalchemy.orm import Session
 
 from app import vector_store
+from app.config import settings
 from app.mesh_client import get_mesh_llm
-from app.models import Event, Product, Recommendation, RecommendationItem, User
+from app.models import AgentRun, AgentRunStep, Event, MeshCallLog, Product, Recommendation, RecommendationItem, User
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +63,121 @@ def is_meaningful_event(event: Event) -> bool:
     return event.event_type in BASE_MEANINGFUL_EVENT_TYPES
 
 
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _elapsed_ms(started_at: float) -> int:
+    return round((perf_counter() - started_at) * 1000)
+
+
+def _error_message(error: Exception) -> str:
+    return f"{type(error).__name__}: {error}"[:1_000]
+
+
+def _state_snapshot(state: "AgentState") -> dict:
+    """Keep replay useful without persisting raw prompts or browser metadata."""
+    snapshot: dict = {}
+    for key in ("trigger_reason", "interest_summary", "query", "relevance_ok", "retry_count", "recommendation_id"):
+        if key in state:
+            snapshot[key] = state[key]
+    if state.get("evidence"):
+        snapshot["evidence"] = state["evidence"]
+    if state.get("retrieved"):
+        snapshot["retrieved"] = [
+            {
+                "product_id": item.get("product_id"),
+                "title": item.get("title"),
+                "distance": round(float(item["distance"]), 4) if item.get("distance") is not None else None,
+            }
+            for item in state["retrieved"]
+        ]
+    if state.get("recommended_items"):
+        snapshot["recommended_items"] = [
+            {"product_id": item.get("product_id"), "rank": item.get("rank")}
+            for item in state["recommended_items"]
+        ]
+    if state.get("narrative"):
+        snapshot["narrative_length"] = len(state["narrative"])
+    return snapshot
+
+
+def _trace_node(
+    db: Session,
+    agent_run_id: int,
+    step_name: str,
+    node: Callable[["AgentState"], dict],
+) -> Callable[["AgentState"], dict]:
+    """Wrap a graph node with durable timing and state-summary telemetry."""
+
+    def traced(state: "AgentState") -> dict:
+        step = AgentRunStep(
+            agent_run_id=agent_run_id,
+            step_name=step_name,
+            status="running",
+            input_snapshot=_state_snapshot(state),
+        )
+        db.add(step)
+        db.commit()
+        step_id = step.id
+        started_at = perf_counter()
+
+        try:
+            update = node(state)
+        except Exception as error:
+            db.rollback()
+            failed_step = db.get(AgentRunStep, step_id)
+            if failed_step:
+                failed_step.status = "failed"
+                failed_step.error_message = _error_message(error)
+                failed_step.completed_at = _utcnow()
+                failed_step.latency_ms = _elapsed_ms(started_at)
+                db.commit()
+            raise
+
+        completed_step = db.get(AgentRunStep, step_id)
+        if completed_step:
+            completed_step.status = "completed"
+            completed_step.output_snapshot = _state_snapshot(update or {})
+            completed_step.completed_at = _utcnow()
+            completed_step.latency_ms = _elapsed_ms(started_at)
+            db.commit()
+        return update
+
+    return traced
+
+
+def _first_int(*values: object) -> int | None:
+    for value in values:
+        if value is None or isinstance(value, bool):
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _mesh_response_details(response) -> tuple[str | None, int | None, int | None, int | None, dict]:
+    """Normalize LangChain's provider metadata into stable Agent Ops fields."""
+    response_metadata = getattr(response, "response_metadata", {}) or {}
+    usage_metadata = getattr(response, "usage_metadata", {}) or {}
+    token_usage = response_metadata.get("token_usage", {}) or {}
+
+    prompt_tokens = _first_int(usage_metadata.get("input_tokens"), token_usage.get("prompt_tokens"))
+    completion_tokens = _first_int(usage_metadata.get("output_tokens"), token_usage.get("completion_tokens"))
+    total_tokens = _first_int(usage_metadata.get("total_tokens"), token_usage.get("total_tokens"))
+    resolved_model = response_metadata.get("model_name") or response_metadata.get("model")
+    metadata = {
+        key: response_metadata[key]
+        for key in ("finish_reason", "system_fingerprint", "service_tier")
+        if response_metadata.get(key) is not None
+    }
+    return resolved_model, prompt_tokens, completion_tokens, total_tokens, metadata
+
+
 class AgentState(TypedDict, total=False):
+    agent_run_id: int
     trigger_reason: str
     interest_summary: str
     evidence: list[str]
@@ -214,11 +331,44 @@ def _generate_narrative(db: Session):
         )
 
         llm = get_mesh_llm().bind(response_format={"type": "json_object"})
-        response = llm.invoke(
-            [
-                {"role": "system", "content": NARRATIVE_SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ]
+        mesh_started_at = perf_counter()
+        try:
+            response = llm.invoke(
+                [
+                    {"role": "system", "content": NARRATIVE_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ]
+            )
+        except Exception as error:
+            db.add(
+                MeshCallLog(
+                    agent_run_id=state["agent_run_id"],
+                    step_name="generate_narrative",
+                    requested_model=settings.mesh_model,
+                    status="failed",
+                    latency_ms=_elapsed_ms(mesh_started_at),
+                    error_message=_error_message(error),
+                )
+            )
+            db.commit()
+            raise
+
+        resolved_model, prompt_tokens, completion_tokens, total_tokens, response_metadata = _mesh_response_details(
+            response
+        )
+        db.add(
+            MeshCallLog(
+                agent_run_id=state["agent_run_id"],
+                step_name="generate_narrative",
+                requested_model=settings.mesh_model,
+                resolved_model=resolved_model,
+                status="succeeded",
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=total_tokens,
+                latency_ms=_elapsed_ms(mesh_started_at),
+                response_metadata=response_metadata or None,
+            )
         )
 
         content = response.content if isinstance(response.content, str) else str(response.content)
@@ -261,6 +411,7 @@ def _persist(db: Session, user: User):
 
         rec = Recommendation(
             user_id=user.id,
+            agent_run_id=state.get("agent_run_id"),
             narrative=state["narrative"],
             trigger_reason=state.get("trigger_reason", ""),
             evidence=json.dumps(state.get("evidence", [])),
@@ -284,14 +435,17 @@ def _persist(db: Session, user: User):
     return node
 
 
-def build_graph(db: Session, user: User):
+def build_graph(db: Session, user: User, agent_run_id: int):
     graph = StateGraph(AgentState)
-    graph.add_node("ingest_activity", _ingest_activity(db, user))
-    graph.add_node("retrieve", _retrieve(db))
-    graph.add_node("grade_relevance", _grade_relevance)
-    graph.add_node("refine_query", _refine_query)
-    graph.add_node("generate_narrative", _generate_narrative(db))
-    graph.add_node("persist", _persist(db, user))
+    graph.add_node("ingest_activity", _trace_node(db, agent_run_id, "analyze_interest", _ingest_activity(db, user)))
+    graph.add_node("retrieve", _trace_node(db, agent_run_id, "retrieve_catalog", _retrieve(db)))
+    graph.add_node("grade_relevance", _trace_node(db, agent_run_id, "evaluate_relevance", _grade_relevance))
+    graph.add_node("refine_query", _trace_node(db, agent_run_id, "refine_query", _refine_query))
+    graph.add_node(
+        "generate_narrative",
+        _trace_node(db, agent_run_id, "generate_narrative", _generate_narrative(db)),
+    )
+    graph.add_node("persist", _trace_node(db, agent_run_id, "store_recommendation", _persist(db, user)))
 
     graph.set_entry_point("ingest_activity")
     graph.add_edge("ingest_activity", "retrieve")
@@ -309,13 +463,35 @@ def build_graph(db: Session, user: User):
 
 
 def run_agent(db: Session, user: User, trigger_reason: str) -> Recommendation | None:
-    graph = build_graph(db, user)
+    agent_run = AgentRun(user_id=user.id, trigger_reason=trigger_reason, status="running")
+    db.add(agent_run)
+    db.commit()
+    agent_run_id = agent_run.id
+    run_started_at = perf_counter()
+    graph = build_graph(db, user, agent_run_id)
     try:
-        result = graph.invoke({"trigger_reason": trigger_reason, "retry_count": 0})
-    except Exception:
+        result = graph.invoke(
+            {"agent_run_id": agent_run_id, "trigger_reason": trigger_reason, "retry_count": 0}
+        )
+    except Exception as error:
+        db.rollback()
+        failed_run = db.get(AgentRun, agent_run_id)
+        if failed_run:
+            failed_run.status = "failed"
+            failed_run.error_message = _error_message(error)
+            failed_run.completed_at = _utcnow()
+            failed_run.latency_ms = _elapsed_ms(run_started_at)
+            db.commit()
         logger.exception("Agent run failed for user %s (trigger=%s)", user.id, trigger_reason)
         return None
+
     rec_id = result.get("recommendation_id")
-    if rec_id is None:
-        return None
-    return db.get(Recommendation, rec_id)
+    completed_run = db.get(AgentRun, agent_run_id)
+    if completed_run:
+        completed_run.status = "completed" if rec_id is not None else "no_result"
+        completed_run.interest_summary = result.get("interest_summary")
+        completed_run.retrieval_query = result.get("query")
+        completed_run.completed_at = _utcnow()
+        completed_run.latency_ms = _elapsed_ms(run_started_at)
+        db.commit()
+    return db.get(Recommendation, rec_id) if rec_id is not None else None
