@@ -11,16 +11,31 @@ const coverStyle: React.CSSProperties = {
     "repeating-linear-gradient(135deg, var(--gw-border-soft) 0 8px, var(--gw-surface-muted) 8px 16px)",
 };
 
-export function CourseCard({ product, reason }: { product: Product; reason?: string }) {
+export function CourseCard({
+  product,
+  reason,
+  recommendationId,
+}: {
+  product: Product;
+  reason?: string;
+  recommendationId?: number;
+}) {
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = product.image_url && !imageFailed;
 
   return (
     <Link
-      href={`/courses/${product.id}`}
-      onClick={() =>
-        track({ event_type: "course_card_click", product_id: product.id, metadata: { category: product.category } })
-      }
+      href={`/courses/${product.id}${recommendationId ? `?recommendation=${recommendationId}` : ""}`}
+      onClick={() => {
+        track({ event_type: "course_card_click", product_id: product.id, metadata: { category: product.category } });
+        if (recommendationId) {
+          track({
+            event_type: "recommendation_click",
+            product_id: product.id,
+            metadata: { category: product.category, recommendation_id: recommendationId },
+          });
+        }
+      }}
       className="group block rounded-xl border border-gw-border-soft bg-gw-surface overflow-hidden no-underline hover:no-underline hover:border-gw-border hover:shadow-[0_10px_24px_-12px_rgba(28,30,42,0.2)] transition-all"
     >
       <div className="aspect-video overflow-hidden">

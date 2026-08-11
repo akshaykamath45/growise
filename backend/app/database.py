@@ -21,6 +21,8 @@ def ensure_schema() -> None:
     with engine.begin() as connection:
         if "course_content" not in product_columns:
             connection.execute(text("ALTER TABLE products ADD COLUMN course_content JSON"))
+        if "vector_sync_error" not in product_columns:
+            connection.execute(text("ALTER TABLE products ADD COLUMN vector_sync_error TEXT"))
         if "agent_run_id" not in recommendation_columns:
             # The new agent_runs table is created by Base.metadata.create_all.
             # The reference is intentionally nullable so existing recommendation

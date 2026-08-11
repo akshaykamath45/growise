@@ -136,7 +136,12 @@ export default function ForYouPage() {
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {rec.items.map((item) => (
-                <CourseCard key={item.product.id} product={item.product} reason={item.reason} />
+                <CourseCard
+                  key={item.product.id}
+                  product={item.product}
+                  reason={item.reason}
+                  recommendationId={rec.id}
+                />
               ))}
             </div>
           </div>

@@ -5,6 +5,7 @@ import { API_URL, ApiError, productsApi } from "@/lib/api";
 import { TrackProductView } from "@/components/track-product-view";
 import { EnrollPanel } from "@/components/enroll-panel";
 import { CourseCurriculum } from "@/components/course-curriculum";
+import { YourSignal } from "@/components/your-signal";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -146,7 +147,10 @@ export default async function CourseDetailPage({
           )}
         </div>
 
-        <EnrollPanel product={product} />
+        <aside className="space-y-6 lg:sticky lg:top-24">
+          <YourSignal />
+          <EnrollPanel product={product} />
+        </aside>
       </div>
     </div>
   );

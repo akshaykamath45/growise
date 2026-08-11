@@ -19,6 +19,14 @@ function displayName(email: string) {
   return local.charAt(0).toUpperCase() + local.slice(1);
 }
 
+const ADMIN_NAV_ITEMS = [
+  { href: "/admin/agent-ops", label: "Overview" },
+  { href: "/admin/events", label: "Events" },
+  { href: "/admin/traces", label: "Trace explorer" },
+  { href: "/admin/catalog-health", label: "Catalog health" },
+  { href: "/admin/courses", label: "Courses" },
+];
+
 export function Navbar() {
   const { user, logout, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -48,16 +56,18 @@ export function Navbar() {
   }
 
   const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isAdmin = user?.role === "admin";
 
   const navLink = (href: string, label: string, dot?: boolean) => {
     const active = pathname === href;
     return (
       <Link
+        key={href}
         href={href}
         aria-current={active ? "page" : undefined}
         className={`flex h-8 items-center gap-1.5 rounded-[7px] px-2.5 text-sm no-underline transition-colors hover:no-underline ${
           active
-            ? "font-semibold text-gw-ink"
+            ? "bg-gw-primary-soft font-semibold text-gw-primary-text"
             : "font-medium text-gw-text-muted hover:bg-gw-surface-muted hover:text-gw-ink"
         }`}
       >
@@ -76,16 +86,30 @@ export function Navbar() {
             <span className="text-[15px] font-semibold tracking-tight text-gw-ink sm:text-base">Growise</span>
           </Link>
 
-          <nav className="hidden shrink-0 items-center gap-0.5 sm:flex">
-            {navLink("/courses", "Catalog")}
-            {user && navLink("/for-you", "For you", true)}
+          {isAdmin && (
+            <span className="hidden border-l border-gw-border-soft pl-3 font-mono text-[10px] font-semibold tracking-[0.14em] text-gw-primary-text lg:inline">
+              ADMIN CONSOLE
+            </span>
+          )}
+
+          <nav className="hidden shrink-0 items-center gap-0.5 sm:flex" aria-label={isAdmin ? "Admin navigation" : "Main navigation"}>
+            {isAdmin ? (
+              ADMIN_NAV_ITEMS.map((item) => navLink(item.href, item.label))
+            ) : (
+              <>
+                {navLink("/courses", "Catalog")}
+                {user && navLink("/for-you", "For you", true)}
+              </>
+            )}
           </nav>
 
-          <div className="hidden flex-1 justify-center px-2 md:flex">
-            <Suspense fallback={<div className="h-9 w-full max-w-[460px]" />}>
-              <NavSearch />
-            </Suspense>
-          </div>
+          {!isAdmin && (
+            <div className="hidden flex-1 justify-center px-2 md:flex">
+              <Suspense fallback={<div className="h-9 w-full max-w-[460px]" />}>
+                <NavSearch />
+              </Suspense>
+            </div>
+          )}
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0 md:gap-2">
           <button
@@ -109,7 +133,7 @@ export function Navbar() {
 
           {loading ? null : user ? (
             <>
-              <span className="hidden sm:contents">{navLink("/my-learning", "My learning")}</span>
+              {!isAdmin && <span className="hidden sm:contents">{navLink("/my-learning", "My learning")}</span>}
 
               <details className="group relative ml-1" ref={accountMenuRef}>
                 <summary
@@ -140,24 +164,27 @@ export function Navbar() {
                         {user.email}
                       </div>
                     </div>
-                    <Link
-                      href="/my-learning"
-                      role="menuitem"
-                      onClick={() => accountMenuRef.current?.removeAttribute("open")}
-                      className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline"
-                    >
-                      My learning
-                    </Link>
-                    {user.role === "admin" && (
+                    {!isAdmin && (
                       <Link
-                        href="/admin/courses"
+                        href="/my-learning"
                         role="menuitem"
                         onClick={() => accountMenuRef.current?.removeAttribute("open")}
                         className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline"
                       >
-                        Course admin
+                        My learning
                       </Link>
                     )}
+                    {isAdmin && ADMIN_NAV_ITEMS.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        role="menuitem"
+                        onClick={() => accountMenuRef.current?.removeAttribute("open")}
+                        className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline sm:hidden"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                     <button
                       role="menuitem"
                       onClick={handleLogout}

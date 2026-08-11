@@ -93,8 +93,14 @@ def _state_snapshot(state: "AgentState") -> dict:
             for item in state["retrieved"]
         ]
     if state.get("recommended_items"):
+        retrieved_titles = {item.get("product_id"): item.get("title") for item in state.get("retrieved", [])}
         snapshot["recommended_items"] = [
-            {"product_id": item.get("product_id"), "rank": item.get("rank")}
+            {
+                "product_id": item.get("product_id"),
+                "title": retrieved_titles.get(item.get("product_id")),
+                "rank": item.get("rank"),
+                "reason": item.get("reason"),
+            }
             for item in state["recommended_items"]
         ]
     if state.get("narrative"):

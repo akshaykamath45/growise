@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { track } from "@/lib/tracker";
 import { API_URL, ApiError, enrollmentsApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -12,6 +12,7 @@ export function EnrollPanel({ product }: { product: Product }) {
   const { user, token, loading: authLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // null = not yet known. Derived flags below avoid setting state synchronously in the effect.
   const [enrolledState, setEnrolledState] = useState<boolean | null>(null);
@@ -46,7 +47,15 @@ export function EnrollPanel({ product }: { product: Product }) {
   }, [authLoading, token, product.id]);
 
   async function handleEnroll() {
-    track({ event_type: "enroll_click", product_id: product.id, metadata: { category: product.category } });
+    const recommendationId = Number(searchParams.get("recommendation"));
+    track({
+      event_type: "enroll_click",
+      product_id: product.id,
+      metadata: {
+        category: product.category,
+        ...(Number.isInteger(recommendationId) && recommendationId > 0 ? { recommendation_id: recommendationId } : {}),
+      },
+    });
 
     if (!token) {
       router.push(`/login?next=${encodeURIComponent(pathname)}`);

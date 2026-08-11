@@ -1,4 +1,17 @@
-import type { Enrollment, Product, ProductInput, Recommendation, User } from "./types";
+import type {
+  ActivityEvent,
+  AgentOpsEvent,
+  AgentOpsOverview,
+  AgentRunDetail,
+  AgentRunSummary,
+  CatalogHealth,
+  CatalogRetryResult,
+  Enrollment,
+  Product,
+  ProductInput,
+  Recommendation,
+  User,
+} from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -117,6 +130,7 @@ export const eventsApi = {
       { method: "POST", body: JSON.stringify({ events }) },
       token
     ),
+  mine: (token: string) => request<ActivityEvent[]>("/api/events/me", {}, token),
 };
 
 // ---- Enrollments ----
@@ -135,4 +149,17 @@ export const recommendationsApi = {
   getForYou: (token: string) => request<Recommendation | null>("/api/recommendations/me", {}, token),
   refresh: (token: string) =>
     request<Recommendation>("/api/recommendations/refresh", { method: "POST" }, token),
+};
+
+export const agentOpsApi = {
+  overview: (token: string) => request<AgentOpsOverview>("/api/admin/agent-ops/overview", {}, token),
+  events: (
+    token: string,
+    filters: { limit?: number; event_type?: string; user_id?: number; product_id?: number; query?: string } = {}
+  ) => request<AgentOpsEvent[]>(`/api/admin/agent-ops/events${toQueryString({ limit: 50, ...filters })}`, {}, token),
+  runs: (token: string, limit = 20) => request<AgentRunSummary[]>(`/api/admin/agent-ops/runs?limit=${limit}`, {}, token),
+  run: (token: string, runId: number) => request<AgentRunDetail>(`/api/admin/agent-ops/runs/${runId}`, {}, token),
+  catalogHealth: (token: string) => request<CatalogHealth>("/api/admin/agent-ops/catalog-health", {}, token),
+  retryCatalogSync: (token: string) =>
+    request<CatalogRetryResult>("/api/admin/agent-ops/catalog-health/retry", { method: "POST" }, token),
 };

@@ -123,6 +123,16 @@ class EventBatchIn(BaseModel):
     events: list[EventIn]
 
 
+class ActivityEventOut(BaseModel):
+    id: int
+    event_type: str
+    product_id: int | None = None
+    product_title: str | None = None
+    search_query: str | None = None
+    metadata: dict | None = None
+    created_at: datetime
+
+
 # ---- Recommendations ----
 class RecommendationItemOut(BaseModel):
     product: ProductOut

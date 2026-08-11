@@ -20,8 +20,10 @@ def _sync_to_vector_store(product: Product) -> bool:
             tags=product.tags,
             price=product.price,
         )
+        product.vector_sync_error = None
         return True
-    except Exception:
+    except Exception as error:
+        product.vector_sync_error = str(error)[:1_000]
         logger.exception("Failed to sync product %s to vector store", product.id)
         return False
 
