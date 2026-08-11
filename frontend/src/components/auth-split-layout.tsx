@@ -14,7 +14,7 @@ export function AuthSplitLayout({
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-start justify-center bg-gw-bg px-4 py-6 sm:px-6 sm:py-10 md:items-center">
       <div className="grid w-full max-w-[980px] grid-cols-1 overflow-hidden rounded-xl border border-gw-border bg-gw-surface shadow-[0_20px_50px_-20px_rgba(28,30,42,0.24)] md:min-h-[620px] md:grid-cols-2 md:rounded-2xl">
-        <div className="hidden md:flex bg-gw-agent-bg border-r border-gw-agent-border px-12 py-12 flex-col justify-center">
+        <div className="hidden md:flex bg-gw-surface-muted border-r-2 border-r-gw-agent px-12 py-12 flex-col justify-center">
           <div className="relative w-9 h-9 flex items-center justify-center">
             <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />
             <span className="absolute inset-2 rounded-full border border-gw-agent-border" />

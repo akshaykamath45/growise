@@ -72,13 +72,19 @@
   --gw-primary-border: #6760ba;
   --gw-focus-ring: rgb(155 144 255 / 26%);
 
+  /* gw-agent-bg is used as a FULL-OPACITY panel fill in several places (the
+     For You hero, the full Your Signal card, the auth split panel, the
+     homepage demo) — not just as a small badge tint. A saturated orange at
+     this lightness reads as mud, not a glow, so this stays close to neutral
+     (low saturation, similar lightness to gw-surface) and lets gw-agent's
+     saturated gold do the accenting via text/icons/borders instead. */
   --gw-agent: #f1bd70;
   --gw-agent-2: #f3d2a3;
-  --gw-agent-bg: #362819;
-  --gw-agent-border: #6b4c2c;
+  --gw-agent-bg: #2a2116;
+  --gw-agent-border: #5c4128;
   --gw-agent-accent: #efad52;
   --gw-agent-icon-border: #ba7b32;
-  --gw-agent-hover: #46331e;
+  --gw-agent-hover: #332818;
 
   --gw-success: #5ee58c;
   --gw-error: #ff8696;
@@ -180,8 +186,10 @@ body {
 }
 
 :root:not([data-theme="dark"]) .home-hero-illustration {
-  /* The PNG has a white canvas; this brings it into the hero's warm paper tone. */
+  /* Blend the illustration's feathered paper canvas into the surrounding hero
+     surface, so the 4:3 asset has no visible rectangular edge. */
   filter: brightness(0.988);
+  mix-blend-mode: multiply;
 }
 
 .home-hero-frame {
@@ -203,9 +211,7 @@ body {
   width: 100%;
   max-width: none;
   height: 100%;
-  object-fit: cover;
-  transform: scale(1.16);
-  transform-origin: 51% 50%;
+  object-fit: contain;
 }
 
 /* The source hero is intentionally light. In dark mode it becomes an illuminated

@@ -141,8 +141,8 @@ export function YourSignal({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-gw-agent-border bg-gw-agent-bg shadow-[0_8px_26px_-22px_rgba(90,71,220,0.55)]">
-      <div className="flex items-center gap-2 border-b border-gw-agent-border px-4 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-gw-border-soft border-t-2 border-t-gw-agent bg-gw-surface shadow-[0_8px_26px_-22px_rgba(90,71,220,0.55)]">
+      <div className="flex items-center gap-2 border-b border-gw-agent-border/50 bg-gw-agent-bg/40 px-4 py-3.5">
         <span className="relative flex h-5 w-5 items-center justify-center" aria-hidden>
           <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />
           <span className="h-1.5 w-1.5 rounded-full bg-gw-agent [animation:gwPulse_2.2s_ease-in-out_infinite]" />

@@ -114,7 +114,7 @@ export function RecommendationDemo({ topic }: { topic: TopicData }) {
       {/* the single recommendation moment, with the orbit illustration filling
           the space beside it on wide screens */}
       <div className="mt-9 grid grid-cols-1 items-center gap-8 sm:mt-12 lg:grid-cols-[minmax(0,620px)_minmax(0,1fr)]">
-      <div className="rounded-2xl border border-gw-agent-border bg-gw-agent-bg px-5 py-6 shadow-[0_24px_50px_-30px_rgba(185,110,24,0.5)] sm:px-7 sm:py-7">
+      <div className="rounded-2xl border border-gw-border-soft border-t-2 border-t-gw-agent bg-gw-surface px-5 py-6 shadow-[0_24px_50px_-30px_rgba(185,110,24,0.35)] sm:px-7 sm:py-7">
         <div className="flex items-center gap-2.5">
           <span className="relative w-[18px] h-[18px] flex items-center justify-center">
             <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />

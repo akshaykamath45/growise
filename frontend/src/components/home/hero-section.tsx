@@ -44,10 +44,10 @@ export function HeroSection({
         <div className="home-hero-frame flex justify-center lg:justify-end">
           <div className="home-hero-art">
             <Image
-              src="/hero-section-right.png"
+              src="/hero-section-right-extended.png"
               alt="Growise course categories connected around a personalised recommendation"
-              width={1469}
-              height={1071}
+              width={1448}
+              height={1086}
               priority
               sizes="(max-width: 1024px) 100vw, 600px"
               className="home-hero-illustration"

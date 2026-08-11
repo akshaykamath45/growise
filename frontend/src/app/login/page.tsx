@@ -94,7 +94,7 @@ function LoginForm() {
           type="button"
           onClick={() => handleDemoLogin("admin")}
           disabled={busy}
-          className="h-11 rounded-[10px] border border-gw-agent-border bg-gw-agent-bg text-[14.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-gw-agent-hover disabled:opacity-60 disabled:cursor-default"
+          className="h-11 rounded-[10px] border border-gw-agent-border bg-gw-surface text-[14.5px] font-medium text-gw-agent-2 cursor-pointer hover:bg-gw-agent-hover disabled:opacity-60 disabled:cursor-default"
         >
           {openingLearning ? "Opening your learning…" : demoLoading === "admin" ? "Signing in as admin…" : "Continue as admin"}
         </button>
