@@ -41,6 +41,8 @@ RETRIEVE_N = 6
 RETRIEVAL_BUFFER = 12
 RELEVANCE_DISTANCE_THRESHOLD = 1.3
 MAX_RECOMMENDED_ITEMS = 3
+DISMISSED_RECOMMENDATION_EVENT = "recommendation_dismissed"
+DISMISSAL_RETENTION_DAYS = 30
 
 # A page visit only counts as genuine interest once dwell crosses this floor —
 # a 2-second bounce shouldn't weigh the same as a considered read.
@@ -121,6 +123,8 @@ def _state_snapshot(state: "AgentState") -> dict:
         snapshot["rerank_fallback"] = True
     if state.get("excluded_enrolled"):
         snapshot["excluded_enrolled"] = state["excluded_enrolled"]
+    if state.get("excluded_dismissed"):
+        snapshot["excluded_dismissed"] = state["excluded_dismissed"]
     if state.get("recommended_items"):
         retrieved_titles = {item.get("product_id"): item.get("title") for item in state.get("retrieved", [])}
         snapshot["recommended_items"] = [
@@ -219,6 +223,7 @@ class AgentState(TypedDict, total=False):
     query: str
     excluded_product_ids: list[int]
     excluded_enrolled: list[dict]
+    excluded_dismissed: list[dict]
     retrieved: list[dict]
     reranked: list[dict]
     rerank_fallback: bool
@@ -281,23 +286,39 @@ def _event_action(event: Event) -> str:
 def _ingest_activity(db: Session, user: User):
     def node(state: AgentState) -> dict:
         enrolled_products = _enrolled_products(db, user)
-        excluded_product_ids = [product.id for product in enrolled_products]
         candidate_events = (
             db.query(Event)
-            .filter(Event.user_id == user.id, Event.event_type.in_(MEANINGFUL_EVENT_TYPES))
+            .filter(
+                Event.user_id == user.id,
+                Event.event_type.in_((*MEANINGFUL_EVENT_TYPES, DISMISSED_RECOMMENDATION_EVENT)),
+            )
             .order_by(Event.created_at.desc())
             # Fetch extra rows because short dwell events are retained for
             # analytics but filtered from agent reasoning below.
             .limit(PROFILE_EVENT_LIMIT)
             .all()
         )
+        # A learner's explicit "not for me" choice is a temporary hard
+        # exclusion. It is deliberately not a *meaningful* trigger event: it
+        # should guide the next run, not spend a Mesh call by itself.
+        dismissal_cutoff = _utcnow().timestamp() - DISMISSAL_RETENTION_DAYS * 86_400
+        dismissed_events = [
+            event
+            for event in candidate_events
+            if event.event_type == DISMISSED_RECOMMENDATION_EVENT
+            and event.product_id
+            and _event_time(event).timestamp() >= dismissal_cutoff
+        ]
+        dismissed_product_ids = {event.product_id for event in dismissed_events if event.product_id}
+        excluded_product_ids = sorted({product.id for product in enrolled_products} | dismissed_product_ids)
+
         # Process in chronological order so adjacent click/view events can be
         # folded into one course-opening session.
         events = sorted((event for event in candidate_events if is_meaningful_event(event)), key=_event_time)
 
         # One batched lookup instead of one round trip per event (was ~1s each
         # against the deployed Postgres — the dominant cost of this node).
-        product_ids = {e.product_id for e in events if e.product_id}
+        product_ids = {e.product_id for e in events if e.product_id} | dismissed_product_ids
         products_by_id = (
             {p.id: p for p in db.query(Product).filter(Product.id.in_(product_ids)).all()}
             if product_ids
@@ -387,6 +408,16 @@ def _ingest_activity(db: Session, user: User):
             {"product_id": product.id, "title": product.title, "category": product.category, "level": product.level}
             for product in enrolled_products[:4]
         ]
+        dismissed_context = [
+            {
+                "product_id": product.id,
+                "title": product.title,
+                "category": product.category,
+                "level": product.level,
+            }
+            for product_id, product in products_by_id.items()
+            if product_id in dismissed_product_ids
+        ][:4]
 
         summary_parts: list[str] = []
         if focus:
@@ -404,6 +435,12 @@ def _ingest_activity(db: Session, user: User):
         if enrolled_context:
             summary_parts.append(
                 "Current learning context: " + ", ".join(item["title"] for item in enrolled_context) + ". These are excluded from recommendations."
+            )
+        if dismissed_context:
+            summary_parts.append(
+                "Learner feedback: not interested in "
+                + ", ".join(item["title"] for item in dismissed_context)
+                + ". These are temporarily excluded from recommendations."
             )
 
         query_parts = ["Next-step courses"]
@@ -431,6 +468,8 @@ def _ingest_activity(db: Session, user: User):
             evidence.append(f"searched \"{search_intent[0]['term']}\"")
         if enrolled_context:
             evidence.append(f"building beyond enrolled {enrolled_context[0]['title']}")
+        if dismissed_context:
+            evidence.append(f"avoiding {dismissed_context[0]['title']} after learner feedback")
 
         learner_profile = {
             "focus": focus,
@@ -440,6 +479,7 @@ def _ingest_activity(db: Session, user: User):
                 for item in search_intent
             ],
             "enrolled_courses": enrolled_context,
+            "dismissed_courses": dismissed_context,
         }
         return {
             "interest_summary": " ".join(summary_parts) or "New learner with no meaningful activity yet.",
@@ -455,6 +495,10 @@ def _ingest_activity(db: Session, user: User):
 def _retrieve(db: Session):
     def node(state: AgentState) -> dict:
         excluded = set(state.get("excluded_product_ids", []))
+        enrolled_ids = {
+            item.get("product_id")
+            for item in state.get("learner_profile", {}).get("enrolled_courses", [])
+        }
         target_n = RETRIEVE_N if state.get("retry_count", 0) == 0 else RETRIEVE_N + 4
         # Hard-filter enrollments before the LLM sees candidates. Over-fetch so
         # the eligible candidate set remains useful even for active learners.
@@ -462,18 +506,24 @@ def _retrieve(db: Session):
         res = vector_store.query_products(state["query"], n_results=n_results)
         retrieved = []
         excluded_enrolled = []
+        excluded_dismissed = []
         ids = res.get("ids", [[]])[0]
         metadatas = res.get("metadatas", [[]])[0]
         distances = res.get("distances", [[]])[0]
         for pid, meta, dist in zip(ids, metadatas, distances):
             product_id = int(pid)
             if product_id in excluded:
-                excluded_enrolled.append({"product_id": product_id, "title": meta.get("title"), "distance": dist})
+                target = excluded_enrolled if product_id in enrolled_ids else excluded_dismissed
+                target.append({"product_id": product_id, "title": meta.get("title"), "distance": dist})
                 continue
             retrieved.append({"product_id": product_id, "title": meta.get("title"), "distance": dist})
             if len(retrieved) >= target_n:
                 break
-        return {"retrieved": retrieved, "excluded_enrolled": excluded_enrolled}
+        return {
+            "retrieved": retrieved,
+            "excluded_enrolled": excluded_enrolled,
+            "excluded_dismissed": excluded_dismissed,
+        }
 
     return node
 
@@ -504,6 +554,8 @@ You write short, honest, specific next-step recommendations grounded strictly in
 the real candidate courses provided to you. Never invent courses, facts, goals, or numbers. Avoid generic \
 marketing fluff. Treat enrolled courses as learning context: they are never eligible recommendations, but \
 use them to recommend a sensible next, deeper, or adjacent skill. Do not recommend duplicate foundations. \
+Courses the learner dismissed are also ineligible for this run. Respect that feedback without calling it out \
+in the learner-facing copy. \
 Reference explicit learner evidence or a concrete relationship to an enrolled foundation in each reason.
 
 Respond with ONLY a JSON object of this exact shape, no markdown fences:
@@ -518,7 +570,8 @@ RERANK_SYSTEM_PROMPT = """You are the decision layer for Growise course recommen
 eligible candidate courses against the supplied learner profile. Be conservative: use explicit browsing
 evidence, search intent, and enrolled-course context, not guessed career goals. An enrolled course is
 learning context only and is never an eligible candidate. Prefer a coherent next step, deeper practice,
-or a useful adjacent capability over duplicate foundations.
+or a useful adjacent capability over duplicate foundations. Courses the learner dismissed are also
+ineligible; do not try to reintroduce them.
 
 Respond with ONLY a JSON object of this exact shape, no markdown fences:
 {"ranked_candidates": [{"product_id": <int>, "fit_score": <0-100>, "learning_role": "deepen|next_step|adjacent", "rationale": "short evidence-grounded rationale"}]}
@@ -609,11 +662,16 @@ def _rerank_candidates(db: Session):
             f"- {item.get('title')} | {item.get('category')} | {item.get('level')}"
             for item in profile.get("enrolled_courses", [])
         ) or "- none"
+        dismissed_text = "\n".join(
+            f"- {item.get('title')} | {item.get('category')} | {item.get('level')}"
+            for item in profile.get("dismissed_courses", [])
+        ) or "- none"
         candidate_text = "\n".join(f"- {_course_rerank_context(product)}" for product in candidates)
         user_prompt = (
             f"Learner profile:\n{state['interest_summary']}\n\n"
             f"Evidence:\n" + "\n".join(f"- {item}" for item in state.get("evidence", [])) + "\n\n"
             f"Enrolled learning context (not eligible):\n{enrolled_text}\n\n"
+            f"Dismissed learner feedback (not eligible):\n{dismissed_text}\n\n"
             f"Eligible candidates to score:\n{candidate_text}"
         )
 
@@ -748,10 +806,19 @@ def _generate_narrative(db: Session):
             )
             or "- none"
         )
+        dismissed_context = profile.get("dismissed_courses", [])
+        dismissed_text = (
+            "\n".join(
+                f"- id={item.get('product_id')} | {item.get('title')} | {item.get('category')} | {item.get('level')}"
+                for item in dismissed_context
+            )
+            or "- none"
+        )
         user_prompt = (
             f"Learner profile summary:\n{state['interest_summary']}\n\n"
             f"Explicit evidence:\n" + "\n".join(f"- {item}" for item in state.get("evidence", [])) + "\n\n"
             f"Already enrolled courses (context only; never recommend):\n{enrolled_text}\n\n"
+            f"Courses dismissed by the learner (never recommend):\n{dismissed_text}\n\n"
             f"Eligible candidate courses (grounded catalog; pick only from these):\n{candidate_text}"
         )
 

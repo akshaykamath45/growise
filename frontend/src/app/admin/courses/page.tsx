@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, productsApi } from "@/lib/api";
 import type { Product, ProductInput } from "@/lib/types";
+import { LoadingState } from "@/components/loading-state";
 
 const EMPTY_FORM: ProductInput = {
   title: "",
@@ -38,6 +39,7 @@ export default function AdminCoursesPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProductInput>(EMPTY_FORM);
@@ -55,7 +57,11 @@ export default function AdminCoursesPage() {
     productsApi
       .list({ limit: 100 })
       .then(setProducts)
-      .finally(() => setFetching(false));
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Failed to load courses."))
+      .finally(() => {
+        setFetching(false);
+        setInitialLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -123,8 +129,9 @@ export default function AdminCoursesPage() {
   }
 
   if (loading || user?.role !== "admin") {
-    return <div className="mx-auto max-w-[1440px] px-4 py-12 text-gw-text-muted sm:px-6 sm:py-16">Checking access…</div>;
+    return <LoadingState title="Opening course management" description="Checking secure workspace access." />;
   }
+  if (initialLoading) return <LoadingState title="Loading course catalog" description="Preparing course records and vector sync status." />;
 
   const totalPages = Math.max(1, Math.ceil(products.length / COURSES_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
@@ -172,8 +179,8 @@ export default function AdminCoursesPage() {
           <tbody>
             {fetching ? (
               <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-gw-text-faint">
-                  Loading…
+                <td colSpan={6} className="px-5 py-3">
+                  <LoadingState compact title="Refreshing course catalog" description="Loading the latest management records." />
                 </td>
               </tr>
             ) : (

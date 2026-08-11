@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessFallback, useAdminAccess } from "@/components/admin-access";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { LoadingState } from "@/components/loading-state";
 import { agentOpsApi } from "@/lib/api";
 import type { AgentOpsOverview, AgentRunSummary } from "@/lib/types";
 
@@ -28,6 +29,7 @@ export default function AgentOpsPage() {
   const [overview, setOverview] = useState<AgentOpsOverview | null>(null);
   const [runs, setRuns] = useState<AgentRunSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -38,6 +40,8 @@ export default function AgentOpsPage() {
       setError(null);
     } catch {
       setError("Agent Ops data could not be loaded. Check the admin session and backend service.");
+    } finally {
+      setInitialLoading(false);
     }
   }, [token]);
 
@@ -51,14 +55,16 @@ export default function AgentOpsPage() {
   }, [load]);
 
   if (authLoading || !allowed) return <AdminAccessFallback />;
+  if (initialLoading) return <LoadingState title="Loading recommendation operations" description="Collecting measured agent activity, Mesh usage, and recent runs." />;
+  if (!overview) return <LoadingState title="Recommendation operations unavailable" description={error || "Trying to reach the admin data service."} />;
 
   const metrics = [
-    { label: "Agent runs today", value: String(overview?.agent_runs_today ?? 0), detail: `${overview?.recommendations_today ?? 0} recommendations stored` },
-    { label: "Tokens used today", value: formatNumber(overview?.tokens_used_today ?? 0), detail: "measured Mesh usage" },
-    { label: "Configured models", value: String(overview?.active_models.length ?? 0), detail: overview?.active_models.join(" · ") || "no calls today" },
-    { label: "Average latency", value: `${overview?.avg_latency_ms ?? 0}ms`, detail: `p95 ${overview?.p95_latency_ms ?? 0}ms` },
-    { label: "Recommendation clicks", value: `${overview?.recommendation_click_rate ?? 0}%`, detail: `${overview?.recommendation_clicks_today ?? 0} recommendations opened` },
-    { label: "Enrollment conversion", value: `${overview?.recommendation_enrollment_rate ?? 0}%`, detail: `${overview?.recommendation_enrollments_today ?? 0} attributed enrollments` },
+    { label: "Agent runs today", value: String(overview.agent_runs_today), detail: `${overview.recommendations_today} recommendations stored` },
+    { label: "Tokens used today", value: formatNumber(overview.tokens_used_today), detail: "measured Mesh usage" },
+    { label: "Configured models", value: String(overview.active_models.length), detail: overview.active_models.join(" · ") || "no calls today" },
+    { label: "Average latency", value: `${overview.avg_latency_ms}ms`, detail: `p95 ${overview.p95_latency_ms}ms` },
+    { label: "Recommendation clicks", value: `${overview.recommendation_click_rate}%`, detail: `${overview.recommendation_clicks_today} recommendations opened` },
+    { label: "Enrollment conversion", value: `${overview.recommendation_enrollment_rate}%`, detail: `${overview.recommendation_enrollments_today} attributed enrollments` },
   ];
 
   return (

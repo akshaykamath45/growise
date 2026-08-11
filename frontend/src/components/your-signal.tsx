@@ -28,6 +28,8 @@ function eventLabel(event: ActivityEvent): string {
       return `Started enrollment · ${course}`;
     case "recommendation_click":
       return `Followed agent pick · ${course}`;
+    case "recommendation_dismissed":
+      return `Skipped for now · ${course}`;
     default:
       return `${event.event_type.replaceAll("_", " ")} · ${course}`;
   }
@@ -87,19 +89,46 @@ export function YourSignal({ compact = false }: { compact?: boolean }) {
           ) : events.length === 0 ? (
             <p className="text-[12px] leading-relaxed text-gw-text-muted">Explore a few courses and the agent will start building your path.</p>
           ) : (
-            <div className="flex flex-col gap-1.5">
-              {events.slice(0, 2).map((event) => (
-                <div key={event.id} className="truncate font-mono text-[10px] text-gw-agent">{eventLabel(event)}</div>
+            <div className="flex flex-col gap-2">
+              <div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Recent activity</div>
+              {events.slice(0, 5).map((event) => (
+                <div key={event.id} className="truncate font-mono text-[10px] leading-relaxed text-gw-agent">{eventLabel(event)}</div>
               ))}
             </div>
           )}
 
           {recommendation && (
             <div className="mt-3 border-t border-gw-agent-border pt-3">
-              <div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-agent">Agent read</div>
-              <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-gw-ink">{recommendation.narrative}</p>
-              <Link href="/for-you" className="mt-2.5 flex items-center justify-between rounded-lg border border-gw-agent-border bg-gw-surface/75 px-3 py-2 text-[11px] font-semibold text-gw-agent no-underline hover:bg-gw-agent-hover hover:no-underline">
-                <span>View your path · {recommendation.items.length} picks</span>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[12px] font-semibold text-gw-ink">Your path is ready</div>
+                  <p className="mt-0.5 text-[10.5px] leading-relaxed text-gw-text-muted">Your recent activity points to a thoughtful next step.</p>
+                </div>
+                <span className="shrink-0 rounded-full border border-gw-agent-border bg-gw-surface/70 px-2 py-1 font-mono text-[9px] text-gw-agent">{recommendation.items.length} picks</span>
+              </div>
+              <div className="mt-3 overflow-hidden rounded-lg border border-gw-agent-border bg-gw-surface/75">
+                <div className="border-b border-gw-agent-border px-3 py-2 font-mono text-[9px] tracking-[0.12em] uppercase text-gw-agent">Next for you</div>
+                {recommendation.items.slice(0, 3).map((item, index) => (
+                  <Link
+                    key={item.product.id}
+                    href={`/courses/${item.product.id}?recommendation=${recommendation.id}`}
+                    onClick={() =>
+                      track({
+                        event_type: "recommendation_click",
+                        product_id: item.product.id,
+                        metadata: { category: item.product.category, recommendation_id: recommendation.id, source: "course_signal" },
+                      })
+                    }
+                    className="flex items-center gap-2 border-b border-gw-agent-border px-3 py-2 last:border-b-0 no-underline transition-colors hover:bg-gw-agent-hover hover:no-underline"
+                  >
+                    <span className="font-mono text-[9px] text-gw-agent">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="min-w-0 flex-1 truncate text-[10.5px] font-medium text-gw-ink">{item.product.title}</span>
+                    <span className="text-gw-agent" aria-hidden>→</span>
+                  </Link>
+                ))}
+              </div>
+              <Link href="/for-you" className="mt-3 flex items-center justify-between rounded-lg border border-gw-agent-border bg-gw-surface/75 px-3 py-2 text-[11px] font-semibold text-gw-agent no-underline hover:bg-gw-agent-hover hover:no-underline">
+                <span>See why these fit</span>
                 <span aria-hidden>→</span>
               </Link>
             </div>
@@ -134,6 +163,7 @@ export function YourSignal({ compact = false }: { compact?: boolean }) {
           <p className="text-sm leading-relaxed text-gw-text-muted">Explore this course or search the catalog. Your signal will appear here in a few seconds.</p>
         ) : (
           <div className="flex max-h-52 flex-col gap-2 overflow-y-auto pr-1">
+            <div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Recent activity</div>
             {events.slice(0, 6).map((event) => (
               <div key={event.id} className="rounded-lg border border-gw-agent-border bg-gw-surface/75 px-2.5 py-2 font-mono text-[10.5px] leading-relaxed text-gw-text">
                 <span className="text-gw-agent">{eventLabel(event)}</span>
@@ -146,6 +176,7 @@ export function YourSignal({ compact = false }: { compact?: boolean }) {
           <div className="mt-4 border-t border-gw-agent-border pt-4">
             <div className="font-mono text-[9.5px] tracking-wide uppercase text-gw-agent">Agent read</div>
             <p className="mt-1.5 text-[13px] leading-relaxed text-gw-ink">{recommendation.narrative}</p>
+            {recommendation.evidence.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{recommendation.evidence.slice(0, 2).map((evidence) => <span key={evidence} className="rounded-full border border-gw-agent-border bg-gw-surface/70 px-2 py-1 font-mono text-[9px] text-gw-agent">{evidence}</span>)}</div>}
             <div className="mt-3 flex flex-wrap gap-2">
               {recommendation.items.slice(0, 2).map((item) => (
                 <Link

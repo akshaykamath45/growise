@@ -137,12 +137,9 @@ export function EnrollPanel({ product, signal }: { product: Product; signal?: Re
             {enrolled ? "FULL ACCESS · LIFETIME" : user ? "30-DAY MONEY-BACK GUARANTEE" : "LOG IN TO ENROLL"}
           </div>
         </div>
-
-        {signal}
-
-        <div className="border-t border-gw-border-hairline bg-gw-surface-muted px-5 py-4.5">
+        <div className="border-t border-gw-border-hairline bg-gw-surface-muted px-5 py-3.5">
           <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">At a glance</div>
-          <dl className="mt-3.5 grid grid-cols-2 gap-x-5 gap-y-3.5">
+          <dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3">
             <div>
               <dt className="font-mono text-[9px] tracking-wide uppercase text-gw-text-placeholder">Duration</dt>
               <dd className="mt-1 text-[13px] font-semibold text-gw-ink">{product.duration_label}</dd>
@@ -162,17 +159,17 @@ export function EnrollPanel({ product, signal }: { product: Product; signal?: Re
           </dl>
           <a
             href="#course-curriculum"
-            className="mt-4 flex items-center justify-between border-t border-gw-border-hairline pt-3.5 text-[12.5px] font-medium text-gw-primary no-underline hover:text-gw-primary-text"
+            className="mt-3.5 flex items-center justify-between border-t border-gw-border-hairline pt-3 text-[12px] font-medium text-gw-primary no-underline hover:text-gw-primary-text"
           >
             Preview the curriculum <span aria-hidden>↓</span>
           </a>
         </div>
 
-        <div className="border-t border-gw-border-hairline px-5 py-4.5">
+        <div className="border-t border-gw-border-hairline px-5 py-3.5">
           <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">Included with enrollment</div>
-          <ul className="mt-3.5 flex flex-col gap-2.5" aria-label="Included with this course">
+          <ul className="mt-3 flex flex-col gap-2" aria-label="Included with this course">
             {includes.map((item) => (
-              <li key={item} className="flex items-center gap-2.5 text-[13px] text-gw-text">
+              <li key={item} className="flex items-center gap-2.5 text-[12.5px] text-gw-text">
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gw-primary-soft text-[9px] font-bold text-gw-primary-text">
                   ✓
                 </span>
@@ -181,6 +178,8 @@ export function EnrollPanel({ product, signal }: { product: Product; signal?: Re
             ))}
           </ul>
         </div>
+
+        {signal}
 
       </div>
       <p className="px-2 text-center text-[11px] leading-relaxed text-gw-text-faint">

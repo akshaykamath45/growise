@@ -35,14 +35,14 @@ export function track(event: Omit<EventInput, "client_ts">) {
 
 /** Flush the queue. `keepalive` lets the request outlive page unload. */
 export function flush(keepalive = false) {
-  if (queue.length === 0 || !currentToken) return;
+  if (queue.length === 0 || !currentToken) return Promise.resolve();
   const batch = queue;
   queue = [];
   if (timer) {
     clearTimeout(timer);
     timer = null;
   }
-  fetch(`${API_URL}/api/events/batch`, {
+  return fetch(`${API_URL}/api/events/batch`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

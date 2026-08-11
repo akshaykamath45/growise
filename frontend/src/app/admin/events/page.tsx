@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminAccessFallback, useAdminAccess } from "@/components/admin-access";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { LoadingState } from "@/components/loading-state";
 import { agentOpsApi } from "@/lib/api";
 import type { AgentOpsEvent } from "@/lib/types";
 
@@ -22,6 +23,7 @@ export default function AdminEventsPage() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -36,6 +38,8 @@ export default function AdminEventsPage() {
       setError(null);
     } catch {
       setError("The event stream could not be loaded.");
+    } finally {
+      setInitialLoading(false);
     }
   }, [eventType, productId, query, token, userId]);
 
@@ -65,6 +69,7 @@ export default function AdminEventsPage() {
   }, [currentPage, totalPages]);
 
   if (authLoading || !allowed) return <AdminAccessFallback />;
+  if (initialLoading) return <LoadingState title="Loading live event stream" description="Preparing consented learner activity and recommendation context." />;
 
   return (
     <main className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6 sm:py-9">

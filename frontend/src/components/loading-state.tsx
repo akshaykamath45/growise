@@ -1,6 +1,16 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type LoadingMessage = {
+  title: string;
+  description: string;
+};
+
 type LoadingStateProps = {
   title?: string;
   description?: string;
+  messages?: LoadingMessage[];
   compact?: boolean;
   className?: string;
 };
@@ -9,9 +19,23 @@ type LoadingStateProps = {
 export function LoadingState({
   title = "Preparing your space",
   description = "Just a moment while we get everything ready.",
+  messages,
   compact = false,
   className = "",
 }: LoadingStateProps) {
+  const loadingMessages = messages?.length ? messages : [{ title, description }];
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    if (loadingMessages.length < 2) return;
+    const interval = window.setInterval(() => {
+      setMessageIndex((current) => (current + 1) % loadingMessages.length);
+    }, 2_200);
+    return () => window.clearInterval(interval);
+  }, [loadingMessages.length]);
+
+  const message = loadingMessages[messageIndex] || loadingMessages[0];
+
   return (
     <div
       role="status"
@@ -24,8 +48,8 @@ export function LoadingState({
           <span className="h-2.5 w-2.5 rounded-full bg-gw-agent shadow-[0_0_0_5px_var(--gw-agent-bg)]" />
         </span>
         <div className={compact ? "text-left" : "mt-4"}>
-          <div className="text-sm font-semibold text-gw-ink">{title}</div>
-          <p className="mt-1 text-[13px] leading-relaxed text-gw-text-muted">{description}</p>
+          <div className="text-sm font-semibold text-gw-ink">{message.title}</div>
+          <p className="mt-1 text-[13px] leading-relaxed text-gw-text-muted">{message.description}</p>
         </div>
       </div>
     </div>

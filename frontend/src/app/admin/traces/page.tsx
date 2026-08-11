@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminAccessFallback, useAdminAccess } from "@/components/admin-access";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { LoadingState } from "@/components/loading-state";
 import { agentOpsApi } from "@/lib/api";
 import type { AgentRunDetail, AgentRunStep, AgentRunSummary, MeshCallLog } from "@/lib/types";
 
@@ -42,7 +43,9 @@ function TraceStepCard({ step, selectedIds }: { step: AgentRunStep; selectedIds:
   const focus = asItems(profile.focus);
   const engagement = asItems(profile.engaged_courses);
   const enrolled = asItems(profile.enrolled_courses);
+  const dismissed = asItems(profile.dismissed_courses);
   const excludedEnrolled = asItems(output.excluded_enrolled);
+  const excludedDismissed = asItems(output.excluded_dismissed);
 
   return (
     <article className="rounded-2xl border border-gw-border-hairline bg-gw-surface-muted p-4 sm:p-5">
@@ -55,12 +58,13 @@ function TraceStepCard({ step, selectedIds }: { step: AgentRunStep; selectedIds:
           {focus.length > 0 && <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Interest points</div><div className="mt-2 flex flex-wrap gap-2">{focus.map((item) => <span key={asText(item.name)} className="rounded-full border border-gw-agent-border bg-gw-agent-bg px-2.5 py-1 text-[11px] text-gw-agent">{asText(item.name)} · {String(item.interest_points ?? 0)} pts</span>)}</div><p className="mt-2 text-[11px] leading-relaxed text-gw-text-muted">Points combine recency, meaningful dwell, and deduplicated course-opening sessions; they are not raw event counts.</p></div>}
           {engagement.length > 0 && <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">High-intent course activity</div><div className="mt-2 flex flex-wrap gap-2">{engagement.slice(0, 3).map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-border-soft bg-gw-surface px-2.5 py-1 text-[11px] text-gw-text">{asText(item.title)} · {String(item.interest_points ?? 0)} pts{item.dwell_seconds ? ` · ${String(item.dwell_seconds)}s` : ""}</span>)}</div></div>}
           {enrolled.length > 0 && <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Learning context — excluded from picks</div><div className="mt-2 flex flex-wrap gap-2">{enrolled.map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-primary-border bg-gw-primary-soft px-2.5 py-1 text-[11px] text-gw-primary-text">{asText(item.title)}</span>)}</div></div>}
+          {dismissed.length > 0 && <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Learner feedback — temporarily excluded</div><div className="mt-2 flex flex-wrap gap-2">{dismissed.map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-border-soft bg-gw-surface-muted px-2.5 py-1 text-[11px] text-gw-text-muted">{asText(item.title)} · not for me</span>)}</div></div>}
           <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Evidence used</div><div className="mt-2 flex flex-wrap gap-2">{asStrings(output.evidence).length > 0 ? asStrings(output.evidence).map((item) => <span key={item} className="rounded-full border border-gw-agent-border bg-gw-agent-bg px-2.5 py-1 text-[11px] text-gw-agent">{item}</span>) : <span className="text-xs text-gw-text-muted">No evidence snapshot recorded.</span>}</div></div>
         </div>
       )}
 
       {step.step_name === "retrieve_catalog" && (
-        <div className="mt-4"><div className="flex items-center justify-between"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Eligible vector retrieval candidates</div><span className="text-[10px] text-gw-text-faint">lower distance is closer</span></div><div className="mt-2 divide-y divide-gw-border-hairline rounded-xl border border-gw-border-hairline bg-gw-surface">{retrieved.map((item) => { const id = Number(item.product_id); const picked = selectedIds.has(id); return <div key={String(item.product_id)} className="flex items-center justify-between gap-3 px-3 py-2.5"><div><div className="text-[12px] font-medium text-gw-ink">{asText(item.title) || `Course #${id}`}</div><div className="mt-0.5 font-mono text-[10px] text-gw-text-faint">vector distance {Number(item.distance).toFixed(3)}</div></div><span className={`rounded-full px-2 py-0.5 font-mono text-[9px] ${picked ? "bg-gw-agent-bg text-gw-agent" : "bg-gw-surface-muted text-gw-text-faint"}`}>{picked ? "final pick" : "not selected"}</span></div>; })}</div>{excludedEnrolled.length > 0 && <div className="mt-3 rounded-xl border border-gw-primary-border bg-gw-primary-soft/40 px-3 py-3"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-primary-text">Filtered before generation — already enrolled</div><div className="mt-2 flex flex-wrap gap-2">{excludedEnrolled.map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-primary-border bg-gw-surface px-2 py-1 text-[10px] text-gw-primary-text">{asText(item.title) || `Course #${String(item.product_id)}`}</span>)}</div></div>}</div>
+        <div className="mt-4"><div className="flex items-center justify-between"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Eligible vector retrieval candidates</div><span className="text-[10px] text-gw-text-faint">lower distance is closer</span></div><div className="mt-2 divide-y divide-gw-border-hairline rounded-xl border border-gw-border-hairline bg-gw-surface">{retrieved.map((item) => { const id = Number(item.product_id); const picked = selectedIds.has(id); return <div key={String(item.product_id)} className="flex items-center justify-between gap-3 px-3 py-2.5"><div><div className="text-[12px] font-medium text-gw-ink">{asText(item.title) || `Course #${id}`}</div><div className="mt-0.5 font-mono text-[10px] text-gw-text-faint">vector distance {Number(item.distance).toFixed(3)}</div></div><span className={`rounded-full px-2 py-0.5 font-mono text-[9px] ${picked ? "bg-gw-agent-bg text-gw-agent" : "bg-gw-surface-muted text-gw-text-faint"}`}>{picked ? "final pick" : "not selected"}</span></div>; })}</div>{excludedEnrolled.length > 0 && <div className="mt-3 rounded-xl border border-gw-primary-border bg-gw-primary-soft/40 px-3 py-3"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-primary-text">Filtered before generation — already enrolled</div><div className="mt-2 flex flex-wrap gap-2">{excludedEnrolled.map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-primary-border bg-gw-surface px-2 py-1 text-[10px] text-gw-primary-text">{asText(item.title) || `Course #${String(item.product_id)}`}</span>)}</div></div>}{excludedDismissed.length > 0 && <div className="mt-3 rounded-xl border border-gw-border-soft bg-gw-surface-muted px-3 py-3"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-muted">Filtered before generation — learner feedback</div><div className="mt-2 flex flex-wrap gap-2">{excludedDismissed.map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-border-soft bg-gw-surface px-2 py-1 text-[10px] text-gw-text-muted">{asText(item.title) || `Course #${String(item.product_id)}`}</span>)}</div></div>}</div>
       )}
 
       {step.step_name === "rerank_candidates" && (
@@ -85,28 +89,62 @@ function MeshRouting({ calls }: { calls: MeshCallLog[] }) {
   return <section className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 sm:p-6"><h2 className="text-lg font-semibold text-gw-ink">Mesh routing</h2><p className="mt-1 text-sm text-gw-text-muted">Actual model, measured token usage, and routing outcome for this run.</p><div className="mt-4 grid gap-3 lg:grid-cols-2">{calls.map((call) => <article key={call.id} className="rounded-xl border border-gw-agent-border bg-gw-agent-bg p-4"><div className="flex justify-between gap-3"><Status status={call.status} /><span className="font-mono text-[10px] text-gw-text-faint">{call.latency_ms ?? 0}ms</span></div><div className="mt-3 text-sm font-semibold text-gw-ink">{call.resolved_model || call.requested_model}</div><div className="mt-1 font-mono text-[10px] text-gw-text-muted">requested: {call.requested_model}</div><div className="mt-4 flex flex-wrap gap-3 font-mono text-[10px] text-gw-agent"><span>{call.total_tokens ?? 0} tokens</span><span>{call.prompt_tokens ?? 0} input</span><span>{call.completion_tokens ?? 0} output</span>{call.cache_hit && <span>cache hit</span>}{call.routing_fallback && <span>fallback used</span>}</div></article>)}</div>{calls.length === 0 && <p className="mt-4 text-sm text-gw-text-muted">No Mesh calls were captured for this run.</p>}</section>;
 }
 
-export default function AdminTracesPage() {
+function AdminTracesContent() {
   const { token, allowed, loading: authLoading } = useAdminAccess();
   const searchParams = useSearchParams();
   const [runs, setRuns] = useState<AgentRunSummary[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<number | null>(null);
   const [run, setRun] = useState<AgentRunDetail | null>(null);
+  const [runsLoading, setRunsLoading] = useState(true);
+  const [runLoading, setRunLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadRuns = useCallback(async () => {
     if (!token) return;
-    const nextRuns = await agentOpsApi.runs(token, 30);
-    setRuns(nextRuns);
-    const requested = Number(searchParams.get("run"));
-    setSelectedRunId((current) => current ?? (Number.isInteger(requested) && requested > 0 ? requested : nextRuns[0]?.id ?? null));
+    try {
+      const nextRuns = await agentOpsApi.runs(token, 30);
+      setRuns(nextRuns);
+      const requested = Number(searchParams.get("run"));
+      setSelectedRunId((current) => current ?? (Number.isInteger(requested) && requested > 0 ? requested : nextRuns[0]?.id ?? null));
+      setLoadError(null);
+    } catch {
+      setLoadError("Recommendation runs could not be loaded.");
+    } finally {
+      setRunsLoading(false);
+    }
   }, [searchParams, token]);
 
   useEffect(() => { const timer = window.setTimeout(() => void loadRuns(), 0); return () => window.clearTimeout(timer); }, [loadRuns]);
-  useEffect(() => { if (token && selectedRunId) agentOpsApi.run(token, selectedRunId).then(setRun).catch(() => setRun(null)); }, [selectedRunId, token]);
+  useEffect(() => {
+    if (!token || !selectedRunId) return;
+    let active = true;
+    const timer = window.setTimeout(() => {
+      setRunLoading(true);
+      setRun(null);
+      agentOpsApi.run(token, selectedRunId)
+        .then((nextRun) => { if (active) setRun(nextRun); })
+        .catch(() => { if (active) setLoadError("This recommendation run could not be loaded."); })
+        .finally(() => { if (active) setRunLoading(false); });
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [selectedRunId, token]);
 
   const selectedIds = useMemo(() => new Set(asItems(run?.steps.find((step) => step.step_name === "generate_narrative")?.output_snapshot?.recommended_items).map((item) => Number(item.product_id))), [run]);
   if (authLoading || !allowed) return <AdminAccessFallback />;
+  if (runsLoading) return <LoadingState title="Loading recommendation traces" description="Preparing agent runs, retrieval evidence, and measured Mesh routes." />;
 
   return <main className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6 sm:py-9"><AdminPageHeader eyebrow="Growise · Admin console" title="Agent trace explorer" description="Select a recommendation run to see its learner signal, retrieval set, selection decisions, and measured Mesh route." />
     <div className="mt-6 grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]"><aside className="rounded-2xl border border-gw-border-soft bg-gw-surface p-4"><div className="font-mono text-[10px] tracking-[0.12em] uppercase text-gw-text-faint">Recommendation runs</div><div className="mt-3 flex max-h-[70vh] flex-col gap-2 overflow-auto">{runs.map((item) => <button key={item.id} onClick={() => setSelectedRunId(item.id)} className={`rounded-xl border p-3 text-left ${item.id === selectedRunId ? "border-gw-agent-border bg-gw-agent-bg" : "border-gw-border-hairline hover:bg-gw-surface-muted"}`}><div className="flex justify-between font-mono text-[10px] text-gw-text-faint"><span>run #{item.id}</span><Status status={item.status} /></div><div className="mt-2 text-xs font-semibold text-gw-ink">{item.user_label}</div><p className="mt-1 line-clamp-2 text-[11px] text-gw-text-muted">{item.interest_summary || item.trigger_reason}</p></button>)}</div></aside>
-      <div>{run ? <><section className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 sm:p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="font-mono text-[10px] tracking-[0.12em] uppercase text-gw-primary-text">Recommendation #{run.recommendation_id ?? "—"} · run #{run.id}</div><h2 className="mt-1.5 text-xl font-semibold text-gw-ink">{run.user_label}</h2><p className="mt-2 max-w-3xl text-sm leading-relaxed text-gw-text-muted">{run.interest_summary}</p></div><span className="font-mono text-xs text-gw-success">● {run.status} · {run.latency_ms ?? 0}ms</span></div></section><section className="mt-6 grid gap-4 lg:grid-cols-2">{run.steps.map((step) => <TraceStepCard key={step.id} step={step} selectedIds={selectedIds} />)}</section><div className="mt-6"><MeshRouting calls={run.mesh_calls} /></div></> : <div className="rounded-2xl border border-dashed border-gw-border p-12 text-center text-sm text-gw-text-muted">Select a recommendation run to inspect it.</div>}</div></div></main>;
+      <div>{run ? <><section className="rounded-2xl border border-gw-border-soft bg-gw-surface p-5 sm:p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="font-mono text-[10px] tracking-[0.12em] uppercase text-gw-primary-text">Recommendation #{run.recommendation_id ?? "—"} · run #{run.id}</div><h2 className="mt-1.5 text-xl font-semibold text-gw-ink">{run.user_label}</h2><p className="mt-2 max-w-3xl text-sm leading-relaxed text-gw-text-muted">{run.interest_summary}</p></div><span className="font-mono text-xs text-gw-success">● {run.status} · {run.latency_ms ?? 0}ms</span></div></section><section className="mt-6 grid gap-4 lg:grid-cols-2">{run.steps.map((step) => <TraceStepCard key={step.id} step={step} selectedIds={selectedIds} />)}</section><div className="mt-6"><MeshRouting calls={run.mesh_calls} /></div></> : runLoading ? <LoadingState compact title="Opening recommendation trace" description="Loading learner signal, retrieval evidence, and Mesh routing." className="rounded-2xl border border-gw-border-soft bg-gw-surface" /> : <div className="rounded-2xl border border-dashed border-gw-border p-12 text-center text-sm text-gw-text-muted">{loadError || "Select a recommendation run to inspect it."}</div>}</div></div></main>;
+}
+
+export default function AdminTracesPage() {
+  return (
+    <Suspense fallback={<AdminAccessFallback />}>
+      <AdminTracesContent />
+    </Suspense>
+  );
 }

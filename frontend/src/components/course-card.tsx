@@ -15,10 +15,12 @@ export function CourseCard({
   product,
   reason,
   recommendationId,
+  pathLabel,
 }: {
   product: Product;
   reason?: string;
   recommendationId?: number;
+  pathLabel?: string;
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = product.image_url && !imageFailed;
@@ -57,7 +59,12 @@ export function CourseCard({
         )}
       </div>
       <div className="p-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {pathLabel && (
+            <span className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-agent">
+              {pathLabel}
+            </span>
+          )}
           <span className="px-2.5 py-0.5 rounded-full bg-gw-primary-soft text-gw-primary-text font-mono text-[9.5px] tracking-wider uppercase">
             {product.level}
           </span>
@@ -76,7 +83,10 @@ export function CourseCard({
           {product.duration_label} · {product.lessons_count} LESSONS
         </div>
         {reason && (
-          <p className="mt-2.5 font-serif italic text-[13.5px] leading-snug text-gw-text-muted">{reason}</p>
+          <div className="mt-3 border-t border-gw-border-hairline pt-2.5">
+            <div className="font-mono text-[9px] tracking-[0.1em] uppercase text-gw-text-faint">Why this fits</div>
+            <p className="mt-1 font-serif italic text-[13.5px] leading-snug text-gw-text-muted">{reason}</p>
+          </div>
         )}
         <div className="mt-3 flex items-baseline gap-2">
           <span className="text-lg font-semibold">${product.price}</span>
