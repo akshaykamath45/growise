@@ -15,6 +15,14 @@ function asItems(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null) : [];
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function asStrings(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
 function Status({ status }: { status: string }) {
   return <span className={`font-mono text-[10px] ${status === "completed" || status === "succeeded" ? "text-gw-success" : "text-gw-error"}`}>● {status}</span>;
 }
@@ -29,6 +37,11 @@ function TraceStepCard({ step, selectedIds }: { step: AgentRunStep; selectedIds:
   const title = step.step_name.replaceAll("_", " ");
   const retrieved = asItems(output.retrieved);
   const picks = asItems(output.recommended_items);
+  const profile = asRecord(output.learner_profile);
+  const focus = asItems(profile.focus);
+  const engagement = asItems(profile.engaged_courses);
+  const enrolled = asItems(profile.enrolled_courses);
+  const excludedEnrolled = asItems(output.excluded_enrolled);
 
   return (
     <article className="rounded-2xl border border-gw-border-hairline bg-gw-surface-muted p-4 sm:p-5">
@@ -38,12 +51,15 @@ function TraceStepCard({ step, selectedIds }: { step: AgentRunStep; selectedIds:
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Detail label="Profile summary" value={asText(output.interest_summary)} />
           <Detail label="Retrieval query" value={asText(output.query)} />
-          <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Evidence used</div><div className="mt-2 flex flex-wrap gap-2">{asItems(output.evidence).length === 0 && Array.isArray(output.evidence) ? (output.evidence as string[]).map((item) => <span key={item} className="rounded-full border border-gw-agent-border bg-gw-agent-bg px-2.5 py-1 text-[11px] text-gw-agent">{item}</span>) : <span className="text-xs text-gw-text-muted">No evidence snapshot recorded.</span>}</div></div>
+          {focus.length > 0 && <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Interest points</div><div className="mt-2 flex flex-wrap gap-2">{focus.map((item) => <span key={asText(item.name)} className="rounded-full border border-gw-agent-border bg-gw-agent-bg px-2.5 py-1 text-[11px] text-gw-agent">{asText(item.name)} · {String(item.interest_points ?? 0)} pts</span>)}</div><p className="mt-2 text-[11px] leading-relaxed text-gw-text-muted">Points combine recency, meaningful dwell, and deduplicated course-opening sessions; they are not raw event counts.</p></div>}
+          {engagement.length > 0 && <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">High-intent course activity</div><div className="mt-2 flex flex-wrap gap-2">{engagement.slice(0, 3).map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-border-soft bg-gw-surface px-2.5 py-1 text-[11px] text-gw-text">{asText(item.title)} · {String(item.interest_points ?? 0)} pts{item.dwell_seconds ? ` · ${String(item.dwell_seconds)}s` : ""}</span>)}</div></div>}
+          {enrolled.length > 0 && <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Learning context — excluded from picks</div><div className="mt-2 flex flex-wrap gap-2">{enrolled.map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-primary-border bg-gw-primary-soft px-2.5 py-1 text-[11px] text-gw-primary-text">{asText(item.title)}</span>)}</div></div>}
+          <div className="sm:col-span-2"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Evidence used</div><div className="mt-2 flex flex-wrap gap-2">{asStrings(output.evidence).length > 0 ? asStrings(output.evidence).map((item) => <span key={item} className="rounded-full border border-gw-agent-border bg-gw-agent-bg px-2.5 py-1 text-[11px] text-gw-agent">{item}</span>) : <span className="text-xs text-gw-text-muted">No evidence snapshot recorded.</span>}</div></div>
         </div>
       )}
 
       {step.step_name === "retrieve_catalog" && (
-        <div className="mt-4"><div className="flex items-center justify-between"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Vector retrieval candidates</div><span className="text-[10px] text-gw-text-faint">lower distance is closer</span></div><div className="mt-2 divide-y divide-gw-border-hairline rounded-xl border border-gw-border-hairline bg-gw-surface">{retrieved.map((item) => { const id = Number(item.product_id); const picked = selectedIds.has(id); return <div key={String(item.product_id)} className="flex items-center justify-between gap-3 px-3 py-2.5"><div><div className="text-[12px] font-medium text-gw-ink">{asText(item.title) || `Course #${id}`}</div><div className="mt-0.5 font-mono text-[10px] text-gw-text-faint">vector distance {Number(item.distance).toFixed(3)}</div></div><span className={`rounded-full px-2 py-0.5 font-mono text-[9px] ${picked ? "bg-gw-agent-bg text-gw-agent" : "bg-gw-surface-muted text-gw-text-faint"}`}>{picked ? "final pick" : "not selected"}</span></div>; })}</div></div>
+        <div className="mt-4"><div className="flex items-center justify-between"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-text-faint">Eligible vector retrieval candidates</div><span className="text-[10px] text-gw-text-faint">lower distance is closer</span></div><div className="mt-2 divide-y divide-gw-border-hairline rounded-xl border border-gw-border-hairline bg-gw-surface">{retrieved.map((item) => { const id = Number(item.product_id); const picked = selectedIds.has(id); return <div key={String(item.product_id)} className="flex items-center justify-between gap-3 px-3 py-2.5"><div><div className="text-[12px] font-medium text-gw-ink">{asText(item.title) || `Course #${id}`}</div><div className="mt-0.5 font-mono text-[10px] text-gw-text-faint">vector distance {Number(item.distance).toFixed(3)}</div></div><span className={`rounded-full px-2 py-0.5 font-mono text-[9px] ${picked ? "bg-gw-agent-bg text-gw-agent" : "bg-gw-surface-muted text-gw-text-faint"}`}>{picked ? "final pick" : "not selected"}</span></div>; })}</div>{excludedEnrolled.length > 0 && <div className="mt-3 rounded-xl border border-gw-primary-border bg-gw-primary-soft/40 px-3 py-3"><div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-primary-text">Filtered before generation — already enrolled</div><div className="mt-2 flex flex-wrap gap-2">{excludedEnrolled.map((item) => <span key={String(item.product_id)} className="rounded-full border border-gw-primary-border bg-gw-surface px-2 py-1 text-[10px] text-gw-primary-text">{asText(item.title) || `Course #${String(item.product_id)}`}</span>)}</div></div>}</div>
       )}
 
       {step.step_name === "evaluate_relevance" && (
