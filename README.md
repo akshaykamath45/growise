@@ -37,7 +37,7 @@ The result is a recommendation system that is:
 flowchart LR
     UI["Learner and admin experience<br/>Next.js 16 + Tailwind CSS"]
     API["Application API<br/>FastAPI + SQLAlchemy"]
-    DB[("SQLite<br/>users, catalogue, events,<br/>enrolments, recommendations, traces")]
+    DB[("Neon PostgreSQL<br/>users, catalogue, events,<br/>enrolments, recommendations, traces")]
     VS[("Chroma vector store<br/>course embeddings")]
     AG["Recommendation agent<br/>LangGraph"]
     MESH["Mesh API<br/>reranking + narrative generation"]
@@ -58,11 +58,11 @@ The Next.js application provides public discovery, authenticated learner pages, 
 
 ### API and transactional data
 
-FastAPI exposes JWT-protected endpoints for authentication, products, enrolments, event ingestion, recommendations, and administrator operations. SQLAlchemy persists the system of record: users, courses, behaviour events, enrolments, recommendation results, agent runs, step traces, and Mesh-call telemetry.
+FastAPI exposes JWT-protected endpoints for authentication, products, enrolments, event ingestion, recommendations, and administrator operations. SQLAlchemy persists the system of record in Neon PostgreSQL: users, courses, behaviour events, enrolments, recommendation results, agent runs, step traces, and Mesh-call telemetry.
 
 ### Vector catalogue and dual-write consistency
 
-Every course has a normal relational record and a semantic representation in Chroma. Product creation and updates commit the database record first, then synchronise the course document and metadata to the vector collection. If vector synchronisation fails, the course is marked as pending instead of silently disappearing from operational visibility; the Catalog Health screen lets an admin retry outstanding syncs.
+Every course has a relational record in Neon PostgreSQL and a semantic representation in Chroma. Product creation and updates commit the database record first, then synchronise the course document and metadata to the vector collection. If vector synchronisation fails, the course is marked as pending instead of silently disappearing from operational visibility; the Catalog Health screen lets an admin retry outstanding syncs.
 
 ### Recommendation agent
 
@@ -105,7 +105,7 @@ flowchart TD
 | --- | --- |
 | Web application | Next.js 16, React, TypeScript, Tailwind CSS |
 | API | FastAPI, Pydantic, SQLAlchemy |
-| Relational storage | SQLite (development default) |
+| Relational storage | Neon PostgreSQL |
 | Semantic retrieval | Chroma with local sentence embeddings |
 | Agent orchestration | LangGraph |
 | AI inference | Mesh API (reranking and recommendation narrative) |
@@ -123,7 +123,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Update `backend/.env` with a valid `MESH_API_KEY`. The default configuration uses a local SQLite database and a local Chroma persistence directory.
+Update `backend/.env` with a valid `MESH_API_KEY` and the Neon PostgreSQL `DATABASE_URL` for your environment. Chroma keeps its semantic catalogue in a local persistence directory.
 
 ```bash
 python seed.py
@@ -184,7 +184,7 @@ All learner-specific and admin endpoints require a bearer token. Product mutatio
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | SQLAlchemy connection string; defaults to local SQLite. |
+| `DATABASE_URL` | Neon PostgreSQL connection string used by SQLAlchemy. |
 | `CHROMA_PERSIST_DIR` | Local path where Chroma retains course embeddings. |
 | `JWT_SECRET` | Secret used to sign access tokens. Use a strong unique value. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-token lifetime in minutes. |

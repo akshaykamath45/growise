@@ -85,7 +85,7 @@ def diagram_architecture(path):
     boxes = [
         ((80, 250, 405, 465), "Learner & Admin UI\nNext.js App Router", PURPLE_SOFT, PURPLE_DARK),
         ((520, 250, 845, 465), "FastAPI JSON API\nAuth · products · events", "#E8F2FF", "#155E9C"),
-        ((960, 165, 1300, 380), "SQLite / Postgres\nUsers · catalog · events\nrecommendations", "#F7EFE2", "#805A13"),
+        ((960, 165, 1300, 380), "Neon PostgreSQL\nUsers · catalog · events\nrecommendations", "#F7EFE2", "#805A13"),
         ((960, 515, 1300, 730), "Chroma vector store\nEmbeddings + metadata\nsemantic retrieval", MINT, GREEN),
         ((1415, 335, 1735, 570), "LangGraph agent\nSignal → retrieve →\nrerank → deliver", "#F3EEFF", PURPLE_DARK),
     ]
@@ -429,7 +429,7 @@ def main():
     add_table(doc, ["Layer", "Responsibility", "Key implementation choices"], [
         ("Next.js 16 frontend", "Learner and admin journeys, course discovery, auth UI and event capture.", "App Router, Tailwind UI, non-blocking tracker, API client."),
         ("FastAPI backend", "JSON API, JWT validation, administrative guards and orchestration.", "Routers for auth, products, events, enrollments, recommendations and agent ops."),
-        ("SQL store", "System of record for users, courses, events, enrollments, recommendations and run telemetry.", "SQLAlchemy entities and durable recommendation history."),
+        ("Neon PostgreSQL", "System of record for users, courses, events, enrollments, recommendations and run telemetry.", "SQLAlchemy entities, SSL-enabled Neon connection and durable recommendation history."),
         ("Chroma", "Semantic catalog retrieval.", "Course metadata + local all-MiniLM-L6-v2 embeddings; explicit sync status."),
         ("LangGraph + Mesh", "Structured recommendation reasoning and persuasive narrative generation.", "Bounded workflow, relevance checks, candidate validation and measured usage."),
     ], [1900, 3500, 3960])

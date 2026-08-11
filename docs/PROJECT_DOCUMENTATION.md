@@ -66,7 +66,7 @@ flowchart LR
         Agent["LangGraph agent\napp/agent/pipeline.py"]
     end
 
-    SQL[("SQLite (dev) / Postgres (prod)\nusers · products · events\nrecommendations · agent_runs")]
+    SQL[("Neon PostgreSQL\nusers · products · events\nrecommendations · agent_runs")]
     Vec[("Chroma vector store\ncourse embeddings\nlocal MiniLM ONNX")]
     Mesh[["Mesh API\nOpenAI-compatible gateway"]]
 
@@ -91,9 +91,9 @@ access goes through `frontend/src/lib/api.ts`, a typed `fetch` wrapper.
 `recommendations`, `agent_ops`), a service layer (`product_service.py`) that owns the catalog's dual-write,
 and the agent package (`agent/pipeline.py`, `agent/trigger.py`).
 
-**SQLite / Postgres** — the system of record: users, catalog, behavioral events, enrollments,
-recommendations, and full agent-run telemetry. `database_url` in `.env` switches between SQLite (dev) and
-Postgres (`psycopg2` is in `requirements.txt`) with no code change.
+**Neon PostgreSQL** — the system of record: users, catalog, behavioral events, enrollments,
+recommendations, and full agent-run telemetry. The deployed `DATABASE_URL` points SQLAlchemy to Neon;
+`psycopg2` provides the PostgreSQL driver and Neon uses an SSL-enabled connection string.
 
 **Chroma** — a local, persistent vector store (`chroma_data/`) holding one embedded document per course.
 Embeddings are computed with Chroma's bundled `all-MiniLM-L6-v2` ONNX model — no GPU, no external embedding
@@ -217,8 +217,8 @@ Key design choices baked into this schema:
   assuming the SQL write implies the vector write succeeded — see [§4.2](#42-catalog-dual-write).
 - **`ensure_schema()`** (`backend/app/database.py`) applies additive `ALTER TABLE` statements for columns
   introduced after the initial `create_all()` (`course_content`, `vector_sync_error`,
-  `recommendations.agent_run_id`), so existing SQLite databases from earlier in the project's life keep
-  working without a migration tool.
+  `recommendations.agent_run_id`), so existing databases from earlier schema versions remain compatible
+  without a migration tool.
 
 ---
 
@@ -237,7 +237,7 @@ tokens travel identically over `fetch` and `fetch(..., keepalive: true)`, which 
 sequenceDiagram
     participant Admin as Admin UI
     participant API as FastAPI /api/products
-    participant SQL as SQLite/Postgres
+    participant SQL as Neon PostgreSQL
     participant Chroma
 
     Admin->>API: POST or PATCH product
@@ -328,7 +328,7 @@ flowchart TD
 Every node is wrapped by `_trace_node`, which records an `AgentRunStep` with a redacted input/output
 snapshot and latency — no raw prompts or PII, just enough to replay the run's shape in the admin UI. All
 writes across the whole graph are staged with `db.add()` and committed exactly once in `run_agent`,
-because committing per step measured at ~1s per round trip against the deployed Postgres instance — roughly
+because committing per step measured at ~1s per round trip against the deployed Neon PostgreSQL instance — roughly
 20 of a 22-second run.
 
 **`ingest_activity`** — Pulls the user's last 180 candidate events (capped by `PROFILE_EVENT_LIMIT`),
@@ -642,7 +642,7 @@ npm run dev   # http://localhost:3000, expects the backend on :8000 (see .env.lo
 
 | Setting | Default | Purpose |
 |---|---|---|
-| `database_url` | `sqlite:///./growise.db` | Swap for a Postgres URL in prod, no code change |
+| `DATABASE_URL` | Neon PostgreSQL URL with `sslmode=require` | Connection used by SQLAlchemy for application data |
 | `chroma_persist_dir` | `./chroma_data` | Vector store location |
 | `mesh_base_url` | `https://api.meshapi.ai/v1` | Mesh's OpenAI-compatible endpoint |
 | `mesh_model` | `openai/gpt-4o-mini` | Model Mesh routes both calls to |
@@ -659,7 +659,7 @@ npm run dev   # http://localhost:3000, expects the backend on :8000 (see .env.lo
 - **The agent can never invent a course** — both Mesh responses are validated against the actual
   retrieved/candidate set before anything touches the database; Mesh chooses order, role, and copy, never
   identity.
-- **One commit per agent run**, not per step — a measured ~1s-per-round-trip cost against deployed Postgres
+- **One commit per agent run**, not per step — a measured ~1s-per-round-trip cost against deployed Neon PostgreSQL
   made per-step commits the dominant cost of a run; all writes are staged and flushed once.
 - **Recommendations are additive/versioned**, never overwritten in place, so both learners and admins can
   see what changed and why across runs.
