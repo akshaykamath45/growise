@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { enrollmentsApi } from "@/lib/api";
 import { CourseCard } from "@/components/course-card";
 import type { Enrollment } from "@/lib/types";
+import { LoadingState } from "@/components/loading-state";
 
 export default function MyLearningPage() {
   const { user, token, loading: authLoading } = useAuth();
@@ -30,7 +31,7 @@ export default function MyLearningPage() {
   }, [load]);
 
   if (authLoading || !user || enrollments === null) {
-    return <div className="mx-auto max-w-[1240px] px-4 py-12 text-gw-text-muted sm:px-6 sm:py-16">Loading…</div>;
+    return <LoadingState title="Opening your learning" description="Gathering your enrolled courses." />;
   }
 
   return (

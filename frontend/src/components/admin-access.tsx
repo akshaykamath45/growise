@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { LoadingState } from "@/components/loading-state";
 
 /** Shared client-side gate. Every admin API is also protected on the server. */
 export function useAdminAccess() {
@@ -18,5 +19,5 @@ export function useAdminAccess() {
 }
 
 export function AdminAccessFallback() {
-  return <div className="mx-auto max-w-[1440px] px-6 py-14 text-gw-text-muted">Checking admin access…</div>;
+  return <LoadingState title="Opening admin console" description="Checking secure workspace access." />;
 }

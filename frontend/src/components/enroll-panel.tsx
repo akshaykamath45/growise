@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { track } from "@/lib/tracker";
 import { API_URL, ApiError, enrollmentsApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/components/toast-provider";
 import type { Product } from "@/lib/types";
 
-export function EnrollPanel({ product }: { product: Product }) {
+export function EnrollPanel({ product, signal }: { product: Product; signal?: ReactNode }) {
   const { user, token, loading: authLoading } = useAuth();
+  const { success } = useToast();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -67,6 +69,7 @@ export function EnrollPanel({ product }: { product: Product }) {
     try {
       await enrollmentsApi.enroll(product.id, token);
       setEnrolledState(true);
+      success({ title: "You’re enrolled", message: `${product.title} is now in My Learning.` });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't enroll right now. Try again.");
     } finally {
@@ -78,7 +81,7 @@ export function EnrollPanel({ product }: { product: Product }) {
 
   return (
     <>
-    <aside aria-label="Course enrollment" className="flex flex-col gap-3 lg:sticky lg:top-20">
+    <aside aria-label="Course enrollment" className="flex flex-col gap-3">
       <div className="overflow-hidden rounded-2xl border border-gw-border-soft bg-gw-surface shadow-[0_18px_34px_-22px_rgba(28,30,42,0.34)]">
         <div className="relative hidden aspect-[16/10] overflow-hidden border-b border-gw-border-soft bg-gw-deep lg:block">
           {product.image_url ? (
@@ -134,6 +137,8 @@ export function EnrollPanel({ product }: { product: Product }) {
             {enrolled ? "FULL ACCESS · LIFETIME" : user ? "30-DAY MONEY-BACK GUARANTEE" : "LOG IN TO ENROLL"}
           </div>
         </div>
+
+        {signal}
 
         <div className="border-t border-gw-border-hairline bg-gw-surface-muted px-5 py-4.5">
           <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-gw-text-faint">At a glance</div>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { Navbar } from "@/components/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ToastProvider } from "@/components/toast-provider";
 
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
 const siteDescription =
@@ -94,8 +95,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-gw-bg text-gw-ink">
         <ThemeProvider>
           <AuthProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
+            <ToastProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

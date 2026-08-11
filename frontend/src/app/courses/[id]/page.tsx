@@ -147,9 +147,8 @@ export default async function CourseDetailPage({
           )}
         </div>
 
-        <aside className="space-y-6 lg:sticky lg:top-24">
-          <YourSignal />
-          <EnrollPanel product={product} />
+        <aside className="space-y-6 lg:sticky lg:top-20 lg:self-start">
+          <EnrollPanel product={product} signal={<YourSignal key="course-signal" compact />} />
         </aside>
       </div>
     </div>

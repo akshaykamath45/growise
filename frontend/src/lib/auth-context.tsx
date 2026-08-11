@@ -11,6 +11,7 @@ interface AuthContextValue {
   user: User | null;
   token: string | null;
   loading: boolean;
+  authenticating: boolean;
   login: (email: string, password: string) => Promise<User>;
   signup: (email: string, password: string, trackingOptIn: boolean) => Promise<User>;
   logout: () => void;
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authenticating, setAuthenticating] = useState(false);
 
   // Tracker sync happens inline wherever token+user become known (applyToken,
   // hydration below) rather than via a reactive effect — a `track()` call made
@@ -30,13 +32,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = window.localStorage.getItem(TOKEN_KEY);
     if (!stored) {
-      setLoading(false);
-      return;
+      const finishHydration = window.setTimeout(() => setLoading(false), 0);
+      return () => window.clearTimeout(finishHydration);
     }
-    setToken(stored);
     authApi
       .me(stored)
       .then((me) => {
+        // Keep the anonymous UI in place until the stored session has been
+        // verified. This prevents the navbar from jumping to a signed-in state.
+        setToken(stored);
         setUser(me);
         setTrackerToken(me.tracking_opt_in ? stored : null);
       })
@@ -48,9 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applyToken = useCallback(async (accessToken: string) => {
+    const me = await authApi.me(accessToken);
+    // A login response alone is not a confirmed session. Commit it only once
+    // /me succeeds so every user-specific surface changes together.
     window.localStorage.setItem(TOKEN_KEY, accessToken);
     setToken(accessToken);
-    const me = await authApi.me(accessToken);
     setUser(me);
     setTrackerToken(me.tracking_opt_in ? accessToken : null);
     return me;
@@ -58,16 +64,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const res = await authApi.login(email, password);
-      return applyToken(res.access_token);
+      setAuthenticating(true);
+      try {
+        const res = await authApi.login(email, password);
+        return await applyToken(res.access_token);
+      } finally {
+        setAuthenticating(false);
+      }
     },
     [applyToken]
   );
 
   const signup = useCallback(
     async (email: string, password: string, trackingOptIn: boolean) => {
-      const res = await authApi.signup(email, password, trackingOptIn);
-      return applyToken(res.access_token);
+      setAuthenticating(true);
+      try {
+        const res = await authApi.signup(email, password, trackingOptIn);
+        return await applyToken(res.access_token);
+      } finally {
+        setAuthenticating(false);
+      }
     },
     [applyToken]
   );
@@ -80,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, authenticating, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { NavSearch } from "@/components/nav-search";
 import { useTheme } from "@/components/theme-provider";
 import { BrandMark } from "@/components/brand-mark";
+import { useToast } from "@/components/toast-provider";
 
 function initials(email: string) {
   return email.slice(0, 2).toUpperCase();
@@ -28,8 +29,9 @@ const ADMIN_NAV_ITEMS = [
 ];
 
 export function Navbar() {
-  const { user, logout, loading } = useAuth();
+  const { user, logout, loading, authenticating } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { success } = useToast();
   const pathname = usePathname();
   const [signingOut, setSigningOut] = useState(false);
   const accountMenuRef = useRef<HTMLDetailsElement>(null);
@@ -52,6 +54,8 @@ export function Navbar() {
     setSigningOut(true);
     signOutTimer.current = window.setTimeout(() => {
       logout();
+      setSigningOut(false);
+      success({ title: "You’re signed out", message: "Come back whenever you’re ready to continue learning." });
     }, 2000);
   }
 
@@ -80,19 +84,26 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-20 border-b border-gw-border-soft bg-gw-surface/90 backdrop-blur md:h-16">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
-        <div className="flex h-14 items-center gap-2 md:h-16 md:gap-4">
+        <div className="relative flex h-14 items-center gap-2 md:h-16 md:gap-4">
           <Link href="/" className="flex shrink-0 items-center gap-2 no-underline hover:no-underline">
             <BrandMark />
             <span className="text-[15px] font-semibold tracking-tight text-gw-ink sm:text-base">Growise</span>
           </Link>
 
           {isAdmin && (
-            <span className="hidden border-l border-gw-border-soft pl-3 font-mono text-[10px] font-semibold tracking-[0.14em] text-gw-primary-text lg:inline">
+            <span className="hidden border-l border-gw-border-soft pl-4 font-mono text-[10px] font-semibold tracking-[0.14em] text-gw-primary-text xl:inline">
               ADMIN CONSOLE
             </span>
           )}
 
-          <nav className="hidden shrink-0 items-center gap-0.5 sm:flex" aria-label={isAdmin ? "Admin navigation" : "Main navigation"}>
+          <nav
+            className={`items-center gap-1 ${
+              isAdmin
+                ? "absolute left-1/2 hidden -translate-x-1/2 xl:flex"
+                : "hidden shrink-0 sm:flex"
+            }`}
+            aria-label={isAdmin ? "Admin navigation" : "Main navigation"}
+          >
             {isAdmin ? (
               ADMIN_NAV_ITEMS.map((item) => navLink(item.href, item.label))
             ) : (
@@ -111,7 +122,7 @@ export function Navbar() {
             </div>
           )}
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0 md:gap-2">
+          <div className={`${isAdmin ? "ml-auto gap-3" : "ml-auto md:ml-0 md:gap-2"} flex shrink-0 items-center gap-1.5`}>
           <button
             type="button"
             onClick={toggleTheme}
@@ -131,7 +142,12 @@ export function Navbar() {
             )}
           </button>
 
-          {loading ? null : user ? (
+          {loading || authenticating ? (
+            <div className="hidden items-center gap-2 rounded-[8px] border border-gw-border-soft bg-gw-surface-muted px-2.5 py-2 text-[11px] text-gw-text-muted sm:flex" role="status" aria-live="polite">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-gw-primary/20 border-t-gw-primary" aria-hidden />
+              {authenticating ? "Signing in…" : "Checking session…"}
+            </div>
+          ) : user ? (
             <>
               {!isAdmin && <span className="hidden sm:contents">{navLink("/my-learning", "My learning")}</span>}
 
@@ -141,11 +157,18 @@ export function Navbar() {
                     if (signingOut) event.preventDefault();
                   }}
                   aria-haspopup="menu"
-                  aria-label="Account menu"
-                  className="flex cursor-pointer list-none items-center gap-1 marker:content-none"
+                  aria-label={isAdmin ? "Admin account menu" : "Account menu"}
+                  className="flex cursor-pointer list-none items-center gap-2 marker:content-none"
                 >
-                  <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gw-primary-soft text-[12.5px] font-semibold text-gw-primary-text">
+                  {isAdmin && (
+                    <span className="hidden text-right leading-tight xl:block">
+                      <span className="block text-[12px] font-semibold text-gw-ink">Admin</span>
+                      <span className="mt-0.5 block font-mono text-[9px] tracking-[0.1em] text-gw-text-faint">WORKSPACE</span>
+                    </span>
+                  )}
+                  <span className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gw-primary-border bg-gw-primary-soft text-[13px] font-semibold text-gw-primary-text shadow-[0_4px_10px_-7px_rgba(90,71,220,0.8)]">
                     {initials(user.email)}
+                    {isAdmin && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-gw-surface bg-gw-success" aria-hidden />}
                   </span>
                   <span className="text-[10px] text-gw-text-placeholder transition-transform group-open:rotate-180" aria-hidden>
                     ▾
@@ -160,6 +183,7 @@ export function Navbar() {
                       <div className="text-[13px] font-semibold text-gw-ink">
                         {displayName(user.email)}
                       </div>
+                      {isAdmin && <div className="mt-1 inline-flex rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[9px] tracking-[0.1em] text-gw-primary-text">ADMINISTRATOR</div>}
                       <div className="mt-0.5 truncate text-[11.5px] text-gw-text-faint">
                         {user.email}
                       </div>
@@ -180,7 +204,7 @@ export function Navbar() {
                         href={item.href}
                         role="menuitem"
                         onClick={() => accountMenuRef.current?.removeAttribute("open")}
-                        className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline sm:hidden"
+                        className="block px-3.5 py-2.5 text-sm text-gw-text no-underline hover:bg-gw-surface-muted hover:no-underline xl:hidden"
                       >
                         {item.label}
                       </Link>

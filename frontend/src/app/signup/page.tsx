@@ -7,9 +7,11 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiError, productsApi } from "@/lib/api";
 import { track } from "@/lib/tracker";
 import { AuthSplitLayout } from "@/components/auth-split-layout";
+import { useToast } from "@/components/toast-provider";
 
 export default function SignupPage() {
   const { signup } = useAuth();
+  const { success } = useToast();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,6 +40,8 @@ export default function SignupPage() {
       for (const topic of topics) {
         track({ event_type: "search", search_query: topic });
       }
+      success({ title: "Account created", message: "Your learning space is ready to explore." });
+      await new Promise((resolve) => window.setTimeout(resolve, 350));
       router.push("/courses");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
@@ -84,7 +88,7 @@ export default function SignupPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-5" aria-busy={submitting}>
         <div>
           <label className="block text-[13px] font-medium text-gw-text mb-1.5">Email</label>
           <input
@@ -142,9 +146,15 @@ export default function SignupPage() {
           disabled={submitting}
           className="h-11 mt-1 rounded-[10px] bg-gw-primary text-white text-[15px] font-medium border-0 cursor-pointer hover:bg-gw-primary-hover disabled:opacity-60"
         >
-          {submitting ? "Creating account…" : "Create account"}
+          {submitting ? "Creating your learning space…" : "Create account"}
         </button>
       </form>
+      {submitting && (
+        <div role="status" className="mt-4 flex items-center gap-2.5 rounded-xl border border-gw-primary-border bg-gw-primary-soft/50 px-3 py-2.5 text-[13px] text-gw-text">
+          <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-gw-primary/20 border-t-gw-primary" />
+          Securing your account and setting up your learning space…
+        </div>
+      )}
     </AuthSplitLayout>
   );
 }

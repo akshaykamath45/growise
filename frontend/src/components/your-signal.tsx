@@ -6,6 +6,7 @@ import { eventsApi, recommendationsApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { track } from "@/lib/tracker";
 import type { ActivityEvent, Recommendation } from "@/lib/types";
+import { LoadingState } from "@/components/loading-state";
 
 const REFRESH_INTERVAL_MS = 5_000;
 
@@ -25,12 +26,14 @@ function eventLabel(event: ActivityEvent): string {
       return `Explored · ${course}`;
     case "enroll_click":
       return `Started enrollment · ${course}`;
+    case "recommendation_click":
+      return `Followed agent pick · ${course}`;
     default:
       return `${event.event_type.replaceAll("_", " ")} · ${course}`;
   }
 }
 
-export function YourSignal() {
+export function YourSignal({ compact = false }: { compact?: boolean }) {
   const { token, user, loading: authLoading } = useAuth();
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
@@ -59,6 +62,53 @@ export function YourSignal() {
     };
   }, [loadSignal]);
 
+  if (compact) {
+    return (
+      <section className="border-t border-gw-agent-border bg-gw-agent-bg/50 px-5 py-4" aria-label="Your learning signal">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-5 w-5 items-center justify-center" aria-hidden>
+            <span className="absolute inset-0 rounded-full border border-gw-agent-icon-border" />
+            <span className="h-1.5 w-1.5 rounded-full bg-gw-agent [animation:gwPulse_2.2s_ease-in-out_infinite]" />
+          </span>
+          <div>
+            <div className="font-semibold text-[13px] text-gw-ink">Your Signal</div>
+            <div className="font-mono text-[9px] tracking-wide uppercase text-gw-agent">live · observed by agent</div>
+          </div>
+          {user?.tracking_opt_in && <span className="ml-auto font-mono text-[9px] text-gw-agent">● live</span>}
+        </div>
+
+        <div className="mt-3">
+          {authLoading ? (
+            <p className="text-[12px] text-gw-text-muted">Preparing your learning signal…</p>
+          ) : !user ? (
+            <p className="text-[12px] leading-relaxed text-gw-text-muted">Sign in to personalise this course with your learning signal.</p>
+          ) : loading ? (
+            <LoadingState compact title="Reading your signal" description="Looking at recent activity." />
+          ) : events.length === 0 ? (
+            <p className="text-[12px] leading-relaxed text-gw-text-muted">Explore a few courses and the agent will start building your path.</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {events.slice(0, 2).map((event) => (
+                <div key={event.id} className="truncate font-mono text-[10px] text-gw-agent">{eventLabel(event)}</div>
+              ))}
+            </div>
+          )}
+
+          {recommendation && (
+            <div className="mt-3 border-t border-gw-agent-border pt-3">
+              <div className="font-mono text-[9px] tracking-[0.12em] uppercase text-gw-agent">Agent read</div>
+              <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-gw-ink">{recommendation.narrative}</p>
+              <Link href="/for-you" className="mt-2.5 flex items-center justify-between rounded-lg border border-gw-agent-border bg-gw-surface/75 px-3 py-2 text-[11px] font-semibold text-gw-agent no-underline hover:bg-gw-agent-hover hover:no-underline">
+                <span>View your path · {recommendation.items.length} picks</span>
+                <span aria-hidden>→</span>
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="overflow-hidden rounded-2xl border border-gw-agent-border bg-gw-agent-bg shadow-[0_8px_26px_-22px_rgba(90,71,220,0.55)]">
       <div className="flex items-center gap-2 border-b border-gw-agent-border px-4 py-3.5">
@@ -79,7 +129,7 @@ export function YourSignal() {
         ) : !user ? (
           <p className="text-sm leading-relaxed text-gw-text-muted">Sign in to let the agent build a learning signal from your browsing.</p>
         ) : loading ? (
-          <p className="text-sm text-gw-text-muted">Reading your recent learning signal…</p>
+          <LoadingState compact title="Reading your signal" description="Looking at recent learning activity." />
         ) : events.length === 0 ? (
           <p className="text-sm leading-relaxed text-gw-text-muted">Explore this course or search the catalog. Your signal will appear here in a few seconds.</p>
         ) : (

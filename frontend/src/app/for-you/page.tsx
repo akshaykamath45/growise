@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiError, recommendationsApi } from "@/lib/api";
 import type { Recommendation } from "@/lib/types";
 import { CourseCard } from "@/components/course-card";
+import { LoadingState } from "@/components/loading-state";
+import { useToast } from "@/components/toast-provider";
 
 function timeAgo(iso: string): string {
   const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
@@ -18,8 +20,14 @@ function timeAgo(iso: string): string {
   return `${Math.round(hours / 24)}d ago`;
 }
 
+function learnerName(email: string): string {
+  const local = email.split("@")[0].replace(/[._-]+/g, " ");
+  return local.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 export default function ForYouPage() {
   const { user, token, loading: authLoading } = useAuth();
+  const { success } = useToast();
   const router = useRouter();
   const [rec, setRec] = useState<Recommendation | null | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,6 +59,7 @@ export default function ForYouPage() {
     try {
       const fresh = await recommendationsApi.refresh(token);
       setRec(fresh);
+      success({ title: "Recommendations refreshed", message: "Your latest learning signals have been considered." });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't refresh right now.");
     } finally {
@@ -59,7 +68,7 @@ export default function ForYouPage() {
   }
 
   if (authLoading || !user || rec === undefined) {
-    return <div className="mx-auto max-w-[1180px] px-4 py-12 text-gw-text-muted sm:px-6 sm:py-16">Loading…</div>;
+    return <LoadingState title="Reading your learning signal" description="Matching recent activity with the catalog." />;
   }
 
   return (
@@ -70,7 +79,7 @@ export default function ForYouPage() {
             {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
           </div>
           <h1 className="mt-2 font-serif text-[34px] leading-tight tracking-tight sm:text-[42px]">
-            For you, {user.email.split("@")[0]}
+            For you, {learnerName(user.email)}
           </h1>
         </div>
       </div>

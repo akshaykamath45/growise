@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
 import { AuthSplitLayout } from "@/components/auth-split-layout";
+import { LoadingState } from "@/components/loading-state";
+import { useToast } from "@/components/toast-provider";
 
 const DEMO_ACCOUNTS = {
   guest: { email: "taylor@example.com", password: "TaylorPass123" },
@@ -23,6 +25,7 @@ function safeNext(value: string | null): string | null {
 
 function LoginForm() {
   const { login } = useAuth();
+  const { success } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = safeNext(searchParams.get("next"));
@@ -38,6 +41,10 @@ function LoginForm() {
     try {
       const user = await login(loginEmail, loginPassword);
       setOpeningLearning(true);
+      success({
+        title: user.role === "admin" ? "Admin workspace ready" : "Welcome back",
+        message: user.role === "admin" ? "Opening your operations dashboard." : "Your learning space is ready.",
+      });
       // Give the successful auth handoff a clear, stable moment before changing
       // routes. This prevents the newly rendered navigation from feeling ready
       // before its destination has settled.
@@ -134,9 +141,9 @@ function LoginForm() {
       </form>
 
       {openingLearning && (
-        <div role="status" className="mt-4 flex items-center gap-2 text-[13px] text-gw-text-muted">
-          <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gw-primary/25 border-t-gw-primary" />
-          Signed in. Opening your learning…
+        <div role="status" className="mt-4 flex items-center gap-2.5 rounded-xl border border-gw-success/25 bg-gw-success/10 px-3 py-2.5 text-[13px] text-gw-text">
+          <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-gw-success/25 border-t-gw-success" />
+          <span><span className="font-medium text-gw-ink">Signed in.</span> Opening your learning space…</span>
         </div>
       )}
 
@@ -159,7 +166,7 @@ export default function LoginPage() {
     >
       <Suspense
         fallback={
-          <div className="py-8 text-center text-[14px] text-gw-text-muted">Loading…</div>
+          <LoadingState compact title="Preparing sign in" description="Getting the form ready." />
         }
       >
         <LoginForm />
