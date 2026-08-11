@@ -4,14 +4,18 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { ApiError, recommendationsApi } from "@/lib/api";
-import type { Recommendation } from "@/lib/types";
-import { CourseCard } from "@/components/course-card";
+import { API_URL, ApiError, recommendationsApi } from "@/lib/api";
+import type { Recommendation, RecommendationItem } from "@/lib/types";
 import { LoadingState } from "@/components/loading-state";
 import { useToast } from "@/components/toast-provider";
+import { learnerFacingEvidenceList } from "@/lib/recommendation-evidence";
 import { flush, track } from "@/lib/tracker";
 
 const PATH_LABELS = ["Start here", "Build next", "Explore adjacent"];
+
+const coverStyle: React.CSSProperties = {
+  backgroundImage: "linear-gradient(135deg, var(--gw-surface-muted), var(--gw-primary-soft))",
+};
 
 function timeAgo(iso: string): string {
   const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
@@ -26,6 +30,57 @@ function timeAgo(iso: string): string {
 function learnerName(email: string): string {
   const local = email.split("@")[0].replace(/[._-]+/g, " ");
   return local.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function PathCourseCard({
+  item,
+  index,
+  recommendationId,
+}: {
+  item: RecommendationItem;
+  index: number;
+  recommendationId: number;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const { product, reason } = item;
+  const isStartingPoint = index === 0;
+  const pathLabel = PATH_LABELS[index] || "Keep exploring";
+
+  return (
+    <Link
+      href={`/courses/${product.id}?recommendation=${recommendationId}`}
+      onClick={() => {
+        track({ event_type: "course_card_click", product_id: product.id, metadata: { category: product.category, source: "for_you_path" } });
+        track({ event_type: "recommendation_click", product_id: product.id, metadata: { category: product.category, recommendation_id: recommendationId } });
+      }}
+      className={`group flex h-full min-h-[510px] flex-col overflow-hidden rounded-2xl border bg-gw-surface no-underline shadow-[0_14px_32px_-26px_rgba(28,30,42,0.55)] transition-all duration-300 hover:-translate-y-1 hover:no-underline hover:shadow-[0_20px_36px_-22px_rgba(74,63,207,0.38)] ${isStartingPoint ? "border-gw-primary-border ring-1 ring-gw-primary-border/60" : "border-gw-border-soft hover:border-gw-primary-border"}`}
+    >
+      <div className="relative aspect-[16/9] shrink-0 overflow-hidden bg-gw-surface-muted">
+        {product.image_url && !imageFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`${API_URL}${product.image_url}`} alt={product.title} loading={index === 0 ? "eager" : "lazy"} onError={() => setImageFailed(true)} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.045]" />
+        ) : (
+          <div style={coverStyle} className="flex h-full w-full items-center justify-center"><span className="font-mono text-[10px] uppercase tracking-[0.16em] text-gw-text-faint">{product.category}</span></div>
+        )}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
+        {isStartingPoint && <span className="absolute left-3 top-3 rounded-full bg-gw-primary px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-white shadow-sm">Best next step</span>}
+      </div>
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-gw-agent">{String(index + 1).padStart(2, "0")} · {pathLabel}</span>
+          <span className="rounded-full bg-gw-primary-soft px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em] text-gw-primary-text">{product.level}</span>
+        </div>
+        <h2 className="mt-3 min-h-[3.15rem] text-[17px] font-semibold leading-snug text-gw-ink transition-colors group-hover:text-gw-primary">{product.title}</h2>
+        <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px] text-gw-text-faint"><span className="font-medium text-gw-text-muted">{product.instructor}</span><span>·</span><span className="text-gw-agent-accent">★</span><span className="font-semibold text-gw-ink-2">{product.rating.toFixed(1)}</span><span className="font-mono text-[10px]">({product.reviews_count.toLocaleString()})</span></div>
+        <div className="mt-1 font-mono text-[10px] tracking-wide text-gw-text-faint">{product.duration_label} · {product.lessons_count} lessons</div>
+        <div className="mt-4 min-h-[116px] rounded-xl border border-gw-agent-border bg-gw-agent-bg/65 p-3.5">
+          <div className="flex items-center justify-between gap-2"><span className="font-mono text-[9px] uppercase tracking-[0.12em] text-gw-agent">Why this fits</span><span className="font-mono text-[9px] text-gw-agent">{isStartingPoint ? "strongest match" : "path extension"}</span></div>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-gw-ink-2">{reason}</p>
+        </div>
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4"><div><span className="text-xl font-semibold text-gw-primary-text">${product.price}</span>{product.old_price && <span className="ml-2 text-[11px] text-gw-text-placeholder line-through">${product.old_price}</span>}</div><span className="rounded-lg bg-gw-primary-soft px-2.5 py-1.5 text-[11px] font-semibold text-gw-primary-text transition-colors group-hover:bg-gw-primary group-hover:text-white">View course →</span></div>
+      </div>
+    </Link>
+  );
 }
 
 export default function ForYouPage() {
@@ -101,6 +156,7 @@ export default function ForYouPage() {
   }
 
   const visibleItems = rec?.items.filter((item) => !dismissedIds.has(item.product.id)) ?? [];
+  const learnerEvidence = rec ? learnerFacingEvidenceList(rec.evidence) : [];
 
   return (
     <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-9">
@@ -150,15 +206,16 @@ export default function ForYouPage() {
             </div>
             <p className="mt-4 max-w-[62ch] font-serif text-[20px] leading-relaxed text-gw-ink-2 sm:text-[23px]">{rec.narrative}</p>
 
-            {rec.evidence.length > 0 && (
+            {learnerEvidence.length > 0 && (
               <div className="mt-5 border-t border-gw-agent-border pt-4">
-                <div className="font-mono text-[9.5px] tracking-[0.12em] uppercase text-gw-agent">What the agent noticed</div>
+                <div className="font-mono text-[9.5px] tracking-[0.12em] uppercase text-gw-agent">What shaped this path</div>
                 <div className="mt-2.5 flex flex-wrap gap-2">
-                  {rec.evidence.map((ev) => (
+                  {learnerEvidence.map((ev) => (
                     <span key={ev} className="rounded-full border border-gw-agent-border bg-gw-surface/70 px-2.5 py-1 font-mono text-[10.5px] tracking-wide text-gw-agent-2">{ev}</span>
                   ))}
                 </div>
-                <p className="mt-3 text-[11.5px] leading-relaxed text-gw-text-muted">Your enrolled courses and any course you dismiss are kept out of future picks.</p>
+                <details className="mt-3 text-[11.5px] leading-relaxed text-gw-text-muted"><summary className="cursor-pointer font-medium text-gw-agent-2">How your focus is calculated</summary><p className="mt-1.5 max-w-[74ch]">Focus strength combines recent course views, meaningful reading time, course opens, and searches. Repeated opens in one visit are counted once, short bounces are ignored, and recent activity carries more weight. It is a signal of current interest—not a grade or a percentage.</p></details>
+                <p className="mt-3 text-[11.5px] leading-relaxed text-gw-text-muted">Courses already in your learning library, and any course you dismiss, stay out of future picks.</p>
               </div>
             )}
             {error && <div className="mt-3 text-sm text-gw-error">{error}</div>}
@@ -167,32 +224,32 @@ export default function ForYouPage() {
           <div className="p-4 sm:p-6">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <div className="font-mono text-[10px] tracking-wider uppercase text-gw-text-faint">A path, not a feed</div>
-                <p className="mt-1 text-sm text-gw-text-muted">Each course has a different role in the next step of your learning.</p>
+                <div className="font-mono text-[10px] tracking-wider uppercase text-gw-text-faint">Your next three moves</div>
+                <p className="mt-1 text-sm text-gw-text-muted">Begin with the strongest match, then build depth and broaden into an adjacent skill.</p>
               </div>
               <span className="font-mono text-[10px] text-gw-text-faint">{visibleItems.length} of {rec.items.length} picks shown</span>
             </div>
 
             {visibleItems.length > 0 ? (
-              <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
+              <>
+                <div className="mt-5 grid grid-cols-3 gap-2 rounded-xl border border-gw-border-hairline bg-gw-surface-muted p-2">
+                  {visibleItems.slice(0, 3).map((item, index) => <div key={`step-${item.product.id}`} className={`rounded-lg px-3 py-2 ${index === 0 ? "bg-gw-primary text-white" : "bg-gw-surface"}`}><div className={`font-mono text-[8.5px] uppercase tracking-[0.11em] ${index === 0 ? "text-white/75" : "text-gw-text-faint"}`}>Step {index + 1}</div><div className={`mt-1 truncate text-[11px] font-semibold ${index === 0 ? "text-white" : "text-gw-ink"}`}>{PATH_LABELS[index] || "Explore"}</div></div>)}
+                </div>
+                <div className="mt-4 grid grid-cols-1 items-stretch gap-4 sm:grid-cols-3">
                 {visibleItems.map((item, index) => (
-                  <div key={item.product.id} className="group relative">
-                    <CourseCard
-                      product={item.product}
-                      reason={item.reason}
-                      recommendationId={rec.id}
-                      pathLabel={`${String(index + 1).padStart(2, "0")} · ${PATH_LABELS[index] || "Keep exploring"}`}
-                    />
+                  <div key={item.product.id} className="grid h-full min-w-0 grid-rows-[1fr_auto] gap-2">
+                    <PathCourseCard item={item} index={index} recommendationId={rec.id} />
                     <button
                       type="button"
                       onClick={() => void dismissRecommendation(item.product.id, item.product.title)}
-                      className="mt-2 w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[11px] text-gw-text-faint cursor-pointer transition-colors hover:border-gw-border-soft hover:bg-gw-surface-muted hover:text-gw-text-muted"
+                      className="w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[11px] text-gw-text-faint cursor-pointer transition-colors hover:border-gw-border-soft hover:bg-gw-surface-muted hover:text-gw-text-muted"
                     >
-                      Not for me
+                      Not a fit for me
                     </button>
                   </div>
                 ))}
-              </div>
+                </div>
+              </>
             ) : (
               <div className="mt-5 rounded-xl border border-dashed border-gw-agent-border bg-gw-agent-bg/50 px-5 py-7 text-center">
                 <div className="font-semibold text-gw-ink">Thanks — we’ve noted your feedback.</div>

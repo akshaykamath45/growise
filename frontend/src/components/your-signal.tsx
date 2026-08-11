@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { track } from "@/lib/tracker";
 import type { ActivityEvent, Recommendation } from "@/lib/types";
 import { LoadingState } from "@/components/loading-state";
+import { learnerFacingEvidenceList } from "@/lib/recommendation-evidence";
 
 const REFRESH_INTERVAL_MS = 5_000;
 
@@ -40,6 +41,7 @@ export function YourSignal({ compact = false }: { compact?: boolean }) {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(true);
+  const learnerEvidence = recommendation ? learnerFacingEvidenceList(recommendation.evidence) : [];
 
   const loadSignal = useCallback(async () => {
     if (!token) {
@@ -176,7 +178,7 @@ export function YourSignal({ compact = false }: { compact?: boolean }) {
           <div className="mt-4 border-t border-gw-agent-border pt-4">
             <div className="font-mono text-[9.5px] tracking-wide uppercase text-gw-agent">Agent read</div>
             <p className="mt-1.5 text-[13px] leading-relaxed text-gw-ink">{recommendation.narrative}</p>
-            {recommendation.evidence.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{recommendation.evidence.slice(0, 2).map((evidence) => <span key={evidence} className="rounded-full border border-gw-agent-border bg-gw-surface/70 px-2 py-1 font-mono text-[9px] text-gw-agent">{evidence}</span>)}</div>}
+            {learnerEvidence.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{learnerEvidence.slice(0, 2).map((evidence) => <span key={evidence} className="rounded-full border border-gw-agent-border bg-gw-surface/70 px-2 py-1 font-mono text-[9px] text-gw-agent">{evidence}</span>)}</div>}
             <div className="mt-3 flex flex-wrap gap-2">
               {recommendation.items.slice(0, 2).map((item) => (
                 <Link

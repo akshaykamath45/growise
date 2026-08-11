@@ -46,18 +46,24 @@
 /* A deliberate night palette, rather than an inverted light theme. Every UI
    surface draws from these semantic tokens so pages change as one system. */
 :root[data-theme="dark"] {
+  /* Elevation ladder: bg -> surface -> surface-muted needs the same kind of
+     clear lightness jump light mode gets for free from lavender -> white.
+     The previous steps (#0d111a -> #171c28 -> #202737) were only ~5 points
+     of lightness apart each, so cards/sidebars/dropdowns barely read as
+     raised above the page and blended into one mass. This ladder roughly
+     doubles each jump. */
   --gw-bg: #0d111a;
-  --gw-surface: #171c28;
-  --gw-surface-muted: #202737;
+  --gw-surface: #1a2033;
+  --gw-surface-muted: #232c44;
   --gw-ink: #f4f2f8;
   --gw-ink-2: #e2e1eb;
   --gw-text: #c6c8d6;
   --gw-text-muted: #aeb2c2;
   --gw-text-faint: #969caf;
   --gw-text-placeholder: #7d8499;
-  --gw-border: #394154;
-  --gw-border-soft: #2a3142;
-  --gw-border-hairline: #242b3b;
+  --gw-border: #414c68;
+  --gw-border-soft: #2f3a54;
+  --gw-border-hairline: #232c40;
 
   --gw-primary: #7165db;
   --gw-primary-hover: #6156c5;
@@ -68,11 +74,11 @@
 
   --gw-agent: #f1bd70;
   --gw-agent-2: #f3d2a3;
-  --gw-agent-bg: #2c2117;
-  --gw-agent-border: #634424;
+  --gw-agent-bg: #362819;
+  --gw-agent-border: #6b4c2c;
   --gw-agent-accent: #efad52;
   --gw-agent-icon-border: #ba7b32;
-  --gw-agent-hover: #3a2a1a;
+  --gw-agent-hover: #46331e;
 
   --gw-success: #5ee58c;
   --gw-error: #ff8696;

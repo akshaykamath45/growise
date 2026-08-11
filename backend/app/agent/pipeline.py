@@ -466,8 +466,6 @@ def _ingest_activity(db: Session, user: User):
             )
         if search_intent:
             evidence.append(f"searched \"{search_intent[0]['term']}\"")
-        if enrolled_context:
-            evidence.append(f"building beyond enrolled {enrolled_context[0]['title']}")
         if dismissed_context:
             evidence.append(f"avoiding {dismissed_context[0]['title']} after learner feedback")
 
