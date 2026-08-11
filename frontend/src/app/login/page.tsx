@@ -49,7 +49,7 @@ function LoginForm() {
       // routes. This prevents the newly rendered navigation from feeling ready
       // before its destination has settled.
       await new Promise((resolve) => window.setTimeout(resolve, 450));
-      router.push(next ?? (user.role === "admin" ? "/admin/courses" : "/courses"));
+      router.push(next ?? (user.role === "admin" ? "/admin/agent-ops" : "/courses"));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
     }

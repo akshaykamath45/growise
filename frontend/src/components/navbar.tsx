@@ -43,6 +43,26 @@ export function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    function dismissOnOutsideClick(event: PointerEvent) {
+      const menu = accountMenuRef.current;
+      if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) {
+        menu.removeAttribute("open");
+      }
+    }
+
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") accountMenuRef.current?.removeAttribute("open");
+    }
+
+    document.addEventListener("pointerdown", dismissOnOutsideClick);
+    document.addEventListener("keydown", dismissOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOnOutsideClick);
+      document.removeEventListener("keydown", dismissOnEscape);
+    };
+  }, []);
+
   // A client-side login swaps the account controls in place while navigation is
   // still settling. Close any inherited disclosure state when that session changes.
   useEffect(() => {

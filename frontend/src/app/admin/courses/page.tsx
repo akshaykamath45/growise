@@ -31,6 +31,7 @@ const inputClass =
   "w-full px-3 h-10 border border-gw-border rounded-[9px] text-sm outline-none bg-gw-surface text-gw-ink focus:border-gw-primary-border";
 const textareaClass =
   "w-full px-3 py-2.5 border border-gw-border rounded-[9px] text-sm outline-none bg-gw-surface text-gw-ink focus:border-gw-primary-border";
+const COURSES_PER_PAGE = 12;
 
 export default function AdminCoursesPage() {
   const { user, token, loading } = useAuth();
@@ -43,6 +44,7 @@ export default function AdminCoursesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!loading && user?.role !== "admin") router.push("/login");
@@ -57,7 +59,8 @@ export default function AdminCoursesPage() {
   }, []);
 
   useEffect(() => {
-    loadProducts();
+    const initialLoad = window.setTimeout(loadProducts, 0);
+    return () => window.clearTimeout(initialLoad);
   }, [loadProducts]);
 
   function openCreate() {
@@ -123,6 +126,12 @@ export default function AdminCoursesPage() {
     return <div className="mx-auto max-w-[1440px] px-4 py-12 text-gw-text-muted sm:px-6 sm:py-16">Checking access…</div>;
   }
 
+  const totalPages = Math.max(1, Math.ceil(products.length / COURSES_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const firstCourse = products.length === 0 ? 0 : (currentPage - 1) * COURSES_PER_PAGE + 1;
+  const lastCourse = Math.min(currentPage * COURSES_PER_PAGE, products.length);
+  const visibleProducts = products.slice((currentPage - 1) * COURSES_PER_PAGE, currentPage * COURSES_PER_PAGE);
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6 sm:py-9">
       <div className="flex items-end gap-4 mb-6">
@@ -168,7 +177,7 @@ export default function AdminCoursesPage() {
                 </td>
               </tr>
             ) : (
-              products.map((p) => (
+              visibleProducts.map((p) => (
                 <tr key={p.id} className="border-b border-gw-border-hairline last:border-0 hover:bg-gw-surface-muted">
                   <td className="px-5 py-3 font-medium">{p.title}</td>
                   <td className="px-5 py-3 text-gw-text-muted">{p.category}</td>
@@ -200,6 +209,47 @@ export default function AdminCoursesPage() {
           </tbody>
         </table>
       </div>
+
+      {!fetching && products.length > 0 && (
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-gw-border-soft bg-gw-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[12.5px] text-gw-text-muted">
+            Showing <span className="font-medium text-gw-ink">{firstCourse}–{lastCourse}</span> of {products.length} courses
+          </p>
+          <nav className="flex items-center gap-1.5" aria-label="Course management pagination">
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              disabled={currentPage === 1}
+              className="h-8 rounded-lg border border-gw-border-soft bg-gw-surface px-3 text-[12px] font-medium text-gw-text transition-colors hover:border-gw-primary-border hover:text-gw-primary-text disabled:cursor-default disabled:opacity-40"
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                onClick={() => setPage(pageNumber)}
+                aria-current={pageNumber === currentPage ? "page" : undefined}
+                className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-[12px] font-semibold transition-colors ${
+                  pageNumber === currentPage
+                    ? "bg-gw-primary-soft text-gw-primary-text"
+                    : "text-gw-text-muted hover:bg-gw-surface-muted hover:text-gw-ink"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              disabled={currentPage === totalPages}
+              className="h-8 rounded-lg border border-gw-border-soft bg-gw-surface px-3 text-[12px] font-medium text-gw-text transition-colors hover:border-gw-primary-border hover:text-gw-primary-text disabled:cursor-default disabled:opacity-40"
+            >
+              Next
+            </button>
+          </nav>
+        </div>
+      )}
 
       {formOpen && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30 p-4 sm:p-6">
