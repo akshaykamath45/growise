@@ -104,15 +104,21 @@ def _state_snapshot(state: "AgentState") -> dict:
         snapshot["learner_profile"] = state["learner_profile"]
     if state.get("evidence"):
         snapshot["evidence"] = state["evidence"]
-    if state.get("retrieved"):
-        snapshot["retrieved"] = [
-            {
-                "product_id": item.get("product_id"),
-                "title": item.get("title"),
-                "distance": round(float(item["distance"]), 4) if item.get("distance") is not None else None,
-            }
-            for item in state["retrieved"]
-        ]
+    for key in ("retrieved", "reranked"):
+        if state.get(key):
+            snapshot[key] = [
+                {
+                    "product_id": item.get("product_id"),
+                    "title": item.get("title"),
+                    "distance": round(float(item["distance"]), 4) if item.get("distance") is not None else None,
+                    "fit_score": item.get("fit_score"),
+                    "learning_role": item.get("learning_role"),
+                    "rationale": item.get("rationale"),
+                }
+                for item in state[key]
+            ]
+    if state.get("rerank_fallback"):
+        snapshot["rerank_fallback"] = True
     if state.get("excluded_enrolled"):
         snapshot["excluded_enrolled"] = state["excluded_enrolled"]
     if state.get("recommended_items"):
@@ -214,6 +220,8 @@ class AgentState(TypedDict, total=False):
     excluded_product_ids: list[int]
     excluded_enrolled: list[dict]
     retrieved: list[dict]
+    reranked: list[dict]
+    rerank_fallback: bool
     relevance_ok: bool
     retry_count: int
     narrative: str
@@ -479,7 +487,7 @@ def _grade_relevance(state: AgentState) -> dict:
 
 
 def _route_after_grade(state: AgentState) -> str:
-    return "generate_narrative" if state.get("relevance_ok") else "refine_query"
+    return "rerank" if state.get("relevance_ok") else "refine_query"
 
 
 def _refine_query(state: AgentState) -> dict:
@@ -504,6 +512,18 @@ Respond with ONLY a JSON object of this exact shape, no markdown fences:
 
 Pick at most 3 courses from the candidates, ordered by relevance. Prefer a useful learning path over three \
 near-identical picks; return fewer than three if the candidate set does not support a distinct next step."""
+
+
+RERANK_SYSTEM_PROMPT = """You are the decision layer for Growise course recommendations. Score only the
+eligible candidate courses against the supplied learner profile. Be conservative: use explicit browsing
+evidence, search intent, and enrolled-course context, not guessed career goals. An enrolled course is
+learning context only and is never an eligible candidate. Prefer a coherent next step, deeper practice,
+or a useful adjacent capability over duplicate foundations.
+
+Respond with ONLY a JSON object of this exact shape, no markdown fences:
+{"ranked_candidates": [{"product_id": <int>, "fit_score": <0-100>, "learning_role": "deepen|next_step|adjacent", "rationale": "short evidence-grounded rationale"}]}
+
+Return every eligible candidate exactly once, highest fit first."""
 
 
 def _course_candidate_context(product: Product) -> str:
@@ -531,9 +551,174 @@ def _course_candidate_context(product: Product) -> str:
     return " | ".join(details)
 
 
-def _generate_narrative(db: Session):
+def _course_rerank_context(product: Product) -> str:
+    """Compact course facts for the decision call; full curriculum goes to narrative generation."""
+    content = product.course_content or {}
+    outcomes = content.get("outcomes") or []
+    outcome_text = "; ".join(str(outcome)[:100] for outcome in outcomes[:2])
+    details = [
+        f"id={product.id}",
+        f"title={product.title}",
+        f"category={product.category}",
+        f"level={product.level}",
+        f"tags={product.tags or 'none'}",
+        f"description={product.description[:240]}",
+    ]
+    if outcome_text:
+        details.append(f"outcomes={outcome_text}")
+    return " | ".join(details)
+
+
+def _fit_score(value: object) -> float:
+    try:
+        return round(max(0.0, min(100.0, float(value))), 1)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _diversify_candidates(candidates: list[dict]) -> list[dict]:
+    """Keep strong semantic matches first, but surface distinct categories before repeats."""
+    seen_categories: set[str] = set()
+    distinct: list[dict] = []
+    repeats: list[dict] = []
+    for candidate in candidates:
+        category = str(candidate.get("category") or "")
+        if category and category not in seen_categories:
+            seen_categories.add(category)
+            distinct.append(candidate)
+        else:
+            repeats.append(candidate)
+    return distinct + repeats
+
+
+def _rerank_candidates(db: Session):
     def node(state: AgentState) -> dict:
         retrieved = state.get("retrieved", [])[:RETRIEVE_N]
+        retrieved_ids = [item["product_id"] for item in retrieved]
+        products_by_id = (
+            {product.id: product for product in db.query(Product).filter(Product.id.in_(retrieved_ids)).all()}
+            if retrieved_ids
+            else {}
+        )
+        candidates = [products_by_id[product_id] for product_id in retrieved_ids if product_id in products_by_id]
+        if not candidates:
+            return {"reranked": [], "rerank_fallback": True}
+
+        profile = state.get("learner_profile", {})
+        enrolled_text = "\n".join(
+            f"- {item.get('title')} | {item.get('category')} | {item.get('level')}"
+            for item in profile.get("enrolled_courses", [])
+        ) or "- none"
+        candidate_text = "\n".join(f"- {_course_rerank_context(product)}" for product in candidates)
+        user_prompt = (
+            f"Learner profile:\n{state['interest_summary']}\n\n"
+            f"Evidence:\n" + "\n".join(f"- {item}" for item in state.get("evidence", [])) + "\n\n"
+            f"Enrolled learning context (not eligible):\n{enrolled_text}\n\n"
+            f"Eligible candidates to score:\n{candidate_text}"
+        )
+
+        llm = get_mesh_llm(temperature=0.2).bind(response_format={"type": "json_object"})
+        mesh_started_at = perf_counter()
+        try:
+            response = llm.invoke(
+                [
+                    {"role": "system", "content": RERANK_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ]
+            )
+        except Exception as error:
+            db.add(
+                MeshCallLog(
+                    agent_run_id=state["agent_run_id"],
+                    step_name="rerank_candidates",
+                    requested_model=settings.mesh_model,
+                    status="failed",
+                    latency_ms=_elapsed_ms(mesh_started_at),
+                    error_message=_error_message(error),
+                )
+            )
+            # Retrieval order remains a safe fallback if the optional decision
+            # call is unavailable; narrative generation can still succeed.
+            return {
+                "reranked": [
+                    {**item, "category": products_by_id[item["product_id"]].category, "learning_role": "vector match", "rationale": "Mesh reranking unavailable."}
+                    for item in retrieved
+                    if item["product_id"] in products_by_id
+                ],
+                "rerank_fallback": True,
+            }
+
+        resolved_model, prompt_tokens, completion_tokens, total_tokens, response_metadata = _mesh_response_details(response)
+        db.add(
+            MeshCallLog(
+                agent_run_id=state["agent_run_id"],
+                step_name="rerank_candidates",
+                requested_model=settings.mesh_model,
+                resolved_model=resolved_model,
+                status="succeeded",
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=total_tokens,
+                latency_ms=_elapsed_ms(mesh_started_at),
+                response_metadata=response_metadata or None,
+            )
+        )
+        content = response.content if isinstance(response.content, str) else str(response.content)
+        parsed = _parse_llm_json(content)
+        structured_candidates = parsed.get("ranked_candidates")
+        ranked_by_id: dict[int, dict] = {}
+        # Treat a malformed response as an optional-decision failure, not a
+        # failed recommendation run. Model JSON sometimes serializes ids as
+        # strings, so normalize only after checking the surrounding shape.
+        if isinstance(structured_candidates, list):
+            for item in structured_candidates:
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    product_id = int(item.get("product_id"))
+                except (TypeError, ValueError):
+                    continue
+                if product_id in products_by_id:
+                    ranked_by_id[product_id] = item
+        if not ranked_by_id:
+            return {
+                "reranked": [
+                    {**item, "category": products_by_id[item["product_id"]].category, "learning_role": "vector match", "rationale": "No usable structured rerank returned."}
+                    for item in retrieved
+                    if item["product_id"] in products_by_id
+                ],
+                "rerank_fallback": True,
+            }
+
+        scored = []
+        for vector_rank, item in enumerate(retrieved):
+            product = products_by_id.get(item["product_id"])
+            decision = ranked_by_id.get(item["product_id"], {})
+            if not product:
+                continue
+            role = str(decision.get("learning_role") or "next_step")
+            if role not in {"deepen", "next_step", "adjacent"}:
+                role = "next_step"
+            scored.append(
+                {
+                    **item,
+                    "category": product.category,
+                    "fit_score": _fit_score(decision.get("fit_score")),
+                    "learning_role": role,
+                    "rationale": str(decision.get("rationale") or "")[:280],
+                    "vector_rank": vector_rank,
+                }
+            )
+        scored.sort(key=lambda item: (-item["fit_score"], item["vector_rank"]))
+        return {"reranked": _diversify_candidates(scored), "rerank_fallback": False}
+
+    return node
+
+
+def _generate_narrative(db: Session):
+    def node(state: AgentState) -> dict:
+        reranked = state.get("reranked") or state.get("retrieved", [])
+        retrieved = reranked[:RETRIEVE_N]
         retrieved_ids = [r["product_id"] for r in retrieved]
         products_by_id = (
             {p.id: p for p in db.query(Product).filter(Product.id.in_(retrieved_ids)).all()}
@@ -546,7 +731,14 @@ def _generate_narrative(db: Session):
         if not candidates:
             return {"narrative": "", "recommended_items": []}
 
-        candidate_text = "\n".join(f"- {_course_candidate_context(product)}" for product in candidates)
+        candidate_details = {item["product_id"]: item for item in retrieved}
+        candidate_text = "\n".join(
+            f"- fit score={candidate_details[product.id].get('fit_score', 'vector-ranked')} | "
+            f"suggested role={candidate_details[product.id].get('learning_role', 'next_step')} | "
+            f"decision rationale={candidate_details[product.id].get('rationale', 'vector relevance')} | "
+            f"{_course_candidate_context(product)}"
+            for product in candidates
+        )
         profile = state.get("learner_profile", {})
         enrolled_context = profile.get("enrolled_courses", [])
         enrolled_text = (
@@ -672,6 +864,7 @@ def build_graph(db: Session, user: User, agent_run_id: int):
     graph.add_node("retrieve", _trace_node(db, agent_run_id, "retrieve_catalog", _retrieve(db)))
     graph.add_node("grade_relevance", _trace_node(db, agent_run_id, "evaluate_relevance", _grade_relevance))
     graph.add_node("refine_query", _trace_node(db, agent_run_id, "refine_query", _refine_query))
+    graph.add_node("rerank", _trace_node(db, agent_run_id, "rerank_candidates", _rerank_candidates(db)))
     graph.add_node(
         "generate_narrative",
         _trace_node(db, agent_run_id, "generate_narrative", _generate_narrative(db)),
@@ -684,9 +877,10 @@ def build_graph(db: Session, user: User, agent_run_id: int):
     graph.add_conditional_edges(
         "grade_relevance",
         _route_after_grade,
-        {"generate_narrative": "generate_narrative", "refine_query": "refine_query"},
+        {"rerank": "rerank", "refine_query": "refine_query"},
     )
     graph.add_edge("refine_query", "retrieve")
+    graph.add_edge("rerank", "generate_narrative")
     graph.add_edge("generate_narrative", "persist")
     graph.add_edge("persist", END)
 
