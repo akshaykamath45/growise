@@ -14,7 +14,9 @@
       "Bash(npx eslint *)",
       "Bash(ls -la \"/Users/akshaykamath/desktop/meshapi\" 2>&1 | head -100)",
       "Bash(xargs -I{} basename {})",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(npm init *)",
+      "Bash(npm install *)"
     ]
   }
 }
