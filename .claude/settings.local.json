@@ -16,7 +16,11 @@
       "Bash(xargs -I{} basename {})",
       "Bash(python3 -c ' *)",
       "Bash(npm init *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(/usr/local/bin/pdfinfo /Users/akshaykamath/Desktop/smart-reco-hackathon/docs/PROJECT_DOCUMENTATION.pdf)",
+      "Bash(python3 build_html.py)",
+      "Bash(node render.js)",
+      "Bash(pdftoppm -png -r 110 Growise_Project_Documentation.pdf page)"
     ]
   }
 }
